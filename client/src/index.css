@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ✅ Define variables inside @layer base so Tailwind picks them up */
+@layer base {
+  :root {
+    --background: hsl(240, 10%, 97.5%);
+    --foreground: hsl(215, 27%, 10%);
+
+    --card: hsl(0, 0%, 100%);
+    --card-foreground: hsl(215, 27%, 10%);
+
+    --popover: hsl(0, 0%, 100%);
+    --popover-foreground: hsl(215, 27%, 10%);
+
+    --primary: hsl(252, 98%, 70%);
+    --primary-foreground: hsl(0, 0%, 100%);
+
+    --secondary: hsl(227, 68%, 29%);
+    --secondary-foreground: hsl(0, 0%, 100%);
+
+    --muted: hsl(240, 4.8%, 95.9%);
+    --muted-foreground: hsl(215, 27%, 10%);
+
+    --accent: hsl(240, 4.8%, 95.9%);
+    --accent-foreground: hsl(252, 98%, 70%);
+
+    --destructive: hsl(0, 84%, 60%);
+    --destructive-foreground: hsl(0, 0%, 100%);
+
+    --border: hsl(214, 32%, 91%);
+    --input: hsl(214, 32%, 91%);
+    --ring: hsl(252, 98%, 70%);
+
+    --chart-1: hsl(252, 98%, 70%);
+    --chart-2: hsl(160, 60%, 45%);
+    --chart-3: hsl(30, 80%, 55%);
+    --chart-4: hsl(280, 65%, 60%);
+    --chart-5: hsl(340, 75%, 55%);
+
+    --sidebar: hsl(0, 0%, 100%);
+    --sidebar-foreground: hsl(215, 27%, 10%);
+    --sidebar-primary: hsl(252, 98%, 70%);
+    --sidebar-primary-foreground: hsl(0, 0%, 100%);
+    --sidebar-accent: hsl(240, 4.8%, 95.9%);
+    --sidebar-accent-foreground: hsl(252, 98%, 70%);
+    --sidebar-border: hsl(214, 32%, 91%);
+    --sidebar-ring: hsl(252, 98%, 70%);
+
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-serif: Georgia, serif;
+    --font-mono: 'Fira Code', monospace;
+
+    --radius: 0.75rem;
+
+    --warning: hsl(38, 92%, 50%);
+    --warning-foreground: hsl(0, 0%, 100%);
+    --error: hsl(0, 84%, 60%);
+    --error-foreground: hsl(0, 0%, 100%);
+  }
+
+  .dark {
+    --background: hsl(215, 27%, 10%);
+    --foreground: hsl(240, 10%, 97.5%);
+
+    --card: hsl(224, 71%, 4%);
+    --card-foreground: hsl(0, 0%, 95%);
+
+    --popover: hsl(215, 27%, 10%);
+    --popover-foreground: hsl(240, 10%, 97.5%);
+
+    --primary: hsl(252, 98%, 70%);
+    --primary-foreground: hsl(0, 0%, 100%);
+
+    --secondary: hsl(240, 10%, 97.5%);
+    --secondary-foreground: hsl(215, 27%, 10%);
+
+    --muted: hsl(215, 27%, 17%);
+    --muted-foreground: hsl(215, 20%, 65%);
+
+    --accent: hsl(215, 27%, 17%);
+    --accent-foreground: hsl(252, 98%, 70%);
+
+    --destructive: hsl(0, 84%, 60%);
+    --destructive-foreground: hsl(0, 0%, 100%);
+
+    --border: hsl(215, 27%, 17%);
+    --input: hsl(215, 27%, 17%);
+    --ring: hsl(252, 98%, 70%);
+
+    --chart-1: hsl(252, 98%, 70%);
+    --chart-2: hsl(160, 60%, 45%);
+    --chart-3: hsl(30, 80%, 55%);
+    --chart-4: hsl(280, 65%, 60%);
+    --chart-5: hsl(340, 75%, 55%);
+
+    --sidebar: hsl(224, 71%, 4%);
+    --sidebar-foreground: hsl(0, 0%, 95%);
+    --sidebar-primary: hsl(252, 98%, 70%);
+    --sidebar-primary-foreground: hsl(0, 0%, 100%);
+    --sidebar-accent: hsl(215, 27%, 17%);
+    --sidebar-accent-foreground: hsl(252, 98%, 70%);
+    --sidebar-border: hsl(215, 27%, 17%);
+    --sidebar-ring: hsl(252, 98%, 70%);
+
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-serif: Georgia, serif;
+    --font-mono: 'Fira Code', monospace;
+
+    --radius: 0.75rem;
+
+    --warning: hsl(38, 92%, 50%);
+    --warning-foreground: hsl(0, 0%, 100%);
+    --error: hsl(0, 84%, 60%);
+    --error-foreground: hsl(0, 0%, 100%);
+  }
+}
+@layer utilities {
+  .bg-background {
+    background-color: theme('colors.background');
+  }
+  .text-foreground {
+    color: theme('colors.foreground');
+  }
+
+
+}
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+
+
+/* ✅ Utilities for data cells */
+.data-cell-error {
+  @apply bg-red-100 dark:bg-red-900 bg-opacity-50;
+}
+
+.data-cell-warning {
+  @apply bg-amber-100 dark:bg-amber-900 bg-opacity-50;
+}
+
+/* ✅ Hide scrollbar but keep scrolling */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+html, body {
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE/Edge */
+}
+
