@@ -25,7 +25,7 @@ export async function setupVite(app: Express, server: Server) {
   if (process.env.NODE_ENV === "production") return; // skip in prod
 
   const vite = await createServer({   // ✅ FIXED
-    root: path.resolve(__dirname, "../../client/dist"), // path to frontend
+    root: path.resolve(__dirname, "../client"), // path to frontend
     server: { middlewareMode: true, hmr: { server } },
     appType: "custom",
   });
@@ -35,14 +35,14 @@ export async function setupVite(app: Express, server: Server) {
   app.use("*", async (req, res, next) => {
     try {
       const url = req.originalUrl;
-      const indexPath = path.resolve(__dirname, "../../client/dist/index.html");
+      const indexPath = path.resolve(__dirname, "../client/index.html");
       let template = await fs.promises.readFile(indexPath, "utf-8");
 
       // Cache-busting in dev
       template = template.replace(
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`
-        
+
       );
 
       const html = await vite.transformIndexHtml(url, template);
@@ -56,7 +56,7 @@ export async function setupVite(app: Express, server: Server) {
 
 // Production: Serve frontend build
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(__dirname, "../../client/dist");
+  const distPath = path.resolve(__dirname, "../client/dist");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(`Could not find frontend build at: ${distPath}`);
