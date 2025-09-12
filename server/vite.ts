@@ -35,13 +35,14 @@ export async function setupVite(app: Express, server: Server) {
   app.use("*", async (req, res, next) => {
     try {
       const url = req.originalUrl;
-      const indexPath = path.resolve(__dirname, "../../client/index.html");
+      const indexPath = path.resolve(__dirname, "../../client/dist/index.html");
       let template = await fs.promises.readFile(indexPath, "utf-8");
 
       // Cache-busting in dev
       template = template.replace(
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`
+        
       );
 
       const html = await vite.transformIndexHtml(url, template);
