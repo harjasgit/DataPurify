@@ -25,7 +25,7 @@ export async function setupVite(app: Express, server: Server) {
   if (process.env.NODE_ENV === "production") return; // skip in prod
 
   const vite = await createServer({   // ✅ FIXED
-    root: path.resolve(__dirname, "../../client"), // path to frontend
+    root: path.resolve(__dirname, "../../client/dist"), // path to frontend
     server: { middlewareMode: true, hmr: { server } },
     appType: "custom",
   });
