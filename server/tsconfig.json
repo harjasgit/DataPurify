@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "types": ["node"],
-    "outDir": "./dist",
+    "outDir": "./dist/server",
     "sourceMap": true,
     "incremental": true
   },
