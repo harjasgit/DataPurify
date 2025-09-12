@@ -25,7 +25,7 @@ export async function setupVite(app: Express, server: Server) {
   if (process.env.NODE_ENV === "production") return; // skip in prod
 
   const vite = await createServer({   // ✅ FIXED
-    root: path.resolve(__dirname, "../../client/dist"), // path to frontend
+    root: path.resolve(__dirname, "../../client"), // path to frontend
     server: { middlewareMode: true, hmr: { server } },
     appType: "custom",
   });
@@ -35,7 +35,7 @@ export async function setupVite(app: Express, server: Server) {
   app.use("*", async (req, res, next) => {
     try {
       const url = req.originalUrl;
-      const indexPath = path.resolve(__dirname, "../client/index.html");
+      const indexPath = path.resolve(__dirname, "../../client/index.html");
       let template = await fs.promises.readFile(indexPath, "utf-8");
 
       // Cache-busting in dev
