@@ -1,8 +1,7 @@
-// vite.ts (backend)
+// vite.ts (backend only)
 import express, { type Express } from "express";
-import { createServer } from "vite";  // ✅ FIXED
+import { createServer } from "vite";  // ✅ FIXED: keep only for local dev
 import { type Server } from "http";
-import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { nanoid } from "nanoid";
@@ -20,12 +19,12 @@ export function log(message: string, source = "express") {
   console.log(`${time} [${source}] ${message}`);
 }
 
-// Dev only: Vite middleware
+// Development: attach Vite middleware (only runs locally)
 export async function setupVite(app: Express, server: Server) {
-  if (process.env.NODE_ENV === "production") return; // skip in prod
+  if (process.env.NODE_ENV === "production") return; // ✅ FIXED: disable vite in production
 
-  const vite = await createServer({   // ✅ FIXED
-    root: path.resolve(__dirname, "../../../client"), // path to frontend
+  const vite = await createServer({
+    root: path.resolve(__dirname, "../../client"), // ✅ FIXED: corrected client path
     server: { middlewareMode: true, hmr: { server } },
     appType: "custom",
   });
@@ -35,15 +34,16 @@ export async function setupVite(app: Express, server: Server) {
   app.use("*", async (req, res, next) => {
     try {
       const url = req.originalUrl;
-      const indexPath = path.resolve(__dirname, "../../../client/index.html");
-      let template = await fs.promises.readFile(indexPath, "utf-8");
 
-      // Cache-busting in dev
-      template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`
-
-      );
+      // ✅ FIXED: removed hardcoded index.html read, inject dynamic script instead
+      let template = `<!DOCTYPE html>
+        <html>
+          <head><title>Dev</title></head>
+          <body>
+            <div id="root"></div>
+            <script type="module" src="/src/main.tsx?v=${nanoid()}"></script>
+          </body>
+        </html>`;
 
       const html = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(html);
@@ -54,17 +54,7 @@ export async function setupVite(app: Express, server: Server) {
   });
 }
 
-// Production: Serve frontend build
-export function serveStatic(app: Express) {
-  const distPath = path.resolve(__dirname, "../../../client/dist");
-
-  if (!fs.existsSync(distPath)) {
-    throw new Error(`Could not find frontend build at: ${distPath}`);
-  }
-
-  app.use(express.static(distPath));
-
-  app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
-  });
+// Production: do nothing (APIs only)
+export function serveStatic(_app: Express) {
+  // ✅ FIXED: removed client/dist serving, since only server is deployed
 }
