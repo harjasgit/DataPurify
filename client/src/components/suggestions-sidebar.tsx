@@ -55,9 +55,11 @@ export  function SuggestionsSidebar({ fileId, issues,  onDataUpdate }: Suggestio
       console.log("Using fileId for clean:", fileId);
 
       console.log("Sending operation:", operation);
+     
+        // ✅ FIXED: Use environment variable instead of relative /api
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-
-      const response = await fetch(`/api/files/${fileId}/clean`, {
+      const response = await fetch(`${apiBase}/files/${fileId}/clean`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ operations: [operation] }),
