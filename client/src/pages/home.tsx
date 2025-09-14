@@ -43,7 +43,11 @@ export default function Home() {
     if (!fileData) return;
 
     try {
-      const response = await fetch(`/api/files/${fileData.id}/export?format=csv`);
+
+        // Use env var for backend API
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+      const response = await fetch(`${apiBase}/api/files/${fileData.id}/export?format=csv`);
       if (!response.ok) throw new Error('Export failed');
       
       const blob = await response.blob();
