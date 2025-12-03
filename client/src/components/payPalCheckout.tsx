@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useRef } from "react";
 
-export default function PayPalSubscription({ planId, userId, onSuccess }) {
+export default function PayPalSubscription({ userId, onSuccess }) {
   const containerRef = useRef(null);
   const initialized = useRef(false);
 
@@ -10,14 +10,23 @@ export default function PayPalSubscription({ planId, userId, onSuccess }) {
     initialized.current = true;
 
     const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+    const backendUrl = import.meta.env.VITE_API_URL; // 🔥 REQUIRED
+
     if (!clientId) {
-      alert("❌ Missing VITE_PAYPAL_CLIENT_ID");
+      console.error("❌ Missing VITE_PAYPAL_CLIENT_ID");
+      alert("Missing PayPal client ID");
+      return;
+    }
+
+    if (!backendUrl) {
+      console.error("❌ Missing VITE_BACKEND_URL");
+      alert("Missing backend API URL");
       return;
     }
 
     const scriptId = "paypal-sdk";
 
-    // Load PayPal SDK once
+    // Load PayPal script only once
     if (!document.getElementById(scriptId)) {
       const script = document.createElement("script");
       script.id = scriptId;
@@ -32,32 +41,47 @@ export default function PayPalSubscription({ planId, userId, onSuccess }) {
     function renderButtons() {
       if (!window.paypal) return;
 
-      // Clear previous button if any
-   if (containerRef.current) containerRef.current.innerHTML = "";
+      // Clear buttons if re-rendering
+      if (containerRef.current) containerRef.current.innerHTML = "";
 
       window.paypal
         .Buttons({
           style: {
             shape: "rect",
+            layout: "vertical",
             color: "blue",
-            layout:"vertical",
             label: "subscribe",
           },
 
-          // 1️⃣ Create Subscription via YOUR backend
+          // 1️⃣ Create subscription through backend ONLY (secure)
           createSubscription: async () => {
-            const res = await fetch("/api/paypal/create-subscription", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ planId, userId }),
-            });
+            try {
+              const res = await fetch(
+                `${backendUrl}/api/paypal/create-subscription`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ userId }),
+                }
+              );
 
-            const data = await res.json();
-            return data.subscriptionId; // return subscription ID to PayPal SDK
+              // Check if backend returned HTML (Vercel mistake)
+              const text = await res.text();
+              try {
+                const data = JSON.parse(text);
+                return data.subscriptionId;
+              } catch {
+                console.error("❌ Backend returned non-JSON:", text);
+                alert("Server error: Invalid backend response");
+                return;
+              }
+            } catch (err) {
+              console.error("❌ Subscription creation failed:", err);
+              alert("Unable to create subscription");
+            }
           },
 
-          // 2️⃣ On Approve — TEMPORARY success handler
-          // Real PRO upgrade happens from webhook
+          // 2️⃣ Temporary approve callback (actual upgrade done in webhook)
           onApprove: async (data) => {
             console.log("Subscription approved:", data.subscriptionID);
             onSuccess?.(data.subscriptionID);
@@ -65,7 +89,7 @@ export default function PayPalSubscription({ planId, userId, onSuccess }) {
           },
 
           onError: (err) => {
-            console.error("PayPal Error:", err);
+            console.error("❌ PayPal Error:", err);
             alert("PayPal subscription failed");
           },
         })

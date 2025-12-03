@@ -81,7 +81,6 @@ export const PricingSection: React.FC = () => {
   return (
     <section className="py-20 bg-muted/20" id="pricing-section">
       <div className="max-w-6xl mx-auto px-6 text-center">
-
         <h2 className="text-3xl font-bold text-foreground mb-3">
           Simple, Transparent <span className="text-primary">Pricing</span>
         </h2>
@@ -103,7 +102,9 @@ export const PricingSection: React.FC = () => {
 
                 <h3 className="text-xl font-semibold mb-1">{plan.name}</h3>
 
-                <p className="text-muted-foreground mb-4">{plan.description}</p>
+                <p className="text-muted-foreground mb-4">
+                  {plan.description}
+                </p>
 
                 <p className="text-3xl font-bold text-primary mb-4">
                   {plan.priceUSD}
@@ -135,11 +136,10 @@ export const PricingSection: React.FC = () => {
                 {plan.buttonText}
               </Button>
 
-              {/* 💳 Subscription Box Appears */}
+              {/* PayPal container */}
               {plan.name === "Pro" && showPayPal && (
                 <div className="mt-6">
-                  <PayPalSubscription
-                    planId={import.meta.env.VITE_PAYPAL_PLAN_ID}
+                  <PayPalSubscription 
                     userId={user?.id}
                     onSuccess={handleSuccess}
                   />
