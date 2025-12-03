@@ -758,7 +758,7 @@ const normalizeCategory = (val: string): string => {
 
  const normalizeFillStrategy = (s: string | undefined) => {
   if (!s) {
-    console.warn("⚠️ No strategy provided from frontend — defaulting to 'mode'");
+   // console.warn("⚠️ No strategy provided from frontend — defaulting to 'mode'");
     return "mode";
   }
 
@@ -777,7 +777,7 @@ const normalizeCategory = (val: string): string => {
   };
 
   const normalized = map[s] ?? s;
-  console.log("🎯 Raw strategy received:", s, "→ normalized to:", normalized);
+ // console.log("🎯 Raw strategy received:", s, "→ normalized to:", normalized);
   return normalized;
 };
 
@@ -788,7 +788,7 @@ case "fill_missing": {
   const col = operation.column;
   const rawStrategy = (operation as any).strategy as string | undefined;
 
-  console.log("🧠 Cleaning operation strategy received from frontend:", rawStrategy);
+ // console.log("🧠 Cleaning operation strategy received from frontend:", rawStrategy);
 
   const strategy = normalizeFillStrategy(rawStrategy);
 
@@ -1739,7 +1739,7 @@ app.post("/api/upload/clean", async (req, res) => {
       }
 
       if (!data.length) return res.status(400).json({ message: "Empty dataset" });
-       console.log("✅ First 5 rows after parsing:", data.slice(0, 5));
+       //console.log("✅ First 5 rows after parsing:", data.slice(0, 5));
   
 
       // ✅ Only detect issues — no auto-clean
@@ -1850,11 +1850,11 @@ app.post("/api/files/:id/clean", async (req, res) => {
     let cumulativeHeaderMap: Record<string, string> | null = null;
 
     for (let op of operations) {
-      console.log(
-        "🧠 Cleaning operation strategy received from frontend:",
-        (op as any).strategy
-      );
-      console.log("🧩 Operation details:", (op as any));
+      // console.log(
+      //   "🧠 Cleaning operation strategy received from frontend:",
+      //   (op as any).strategy
+      // );
+     // console.log("🧩 Operation details:", (op as any));
 
       const result: any = DataProcessor.applyCleaningOperation(cleaned, op as any);
 
@@ -1892,7 +1892,7 @@ app.post("/api/files/:id/clean", async (req, res) => {
 
     // 🗺️ 5. Remap issue.column if headers were standardized
     if (cumulativeHeaderMap) {
-      console.log("🔁 Remapping issue columns using headerMap:", cumulativeHeaderMap);
+      //console.log("🔁 Remapping issue columns using headerMap:", cumulativeHeaderMap);
 
       issuesAfter = (issuesAfter || []).map((issue: any) => {
         if (issue?.column && cumulativeHeaderMap[issue.column]) {
@@ -1954,10 +1954,9 @@ if (Array.isArray(originalOrder) && originalOrder.length > 0) {
   orderedColumns = currentCols; // fallback if no original order sent
 }
 
-console.log("🧩 Original order from frontend:", originalOrder);
-console.log("🧩 Current columns detected:", currentCols);
-console.log("✅ Final ordered columns:", orderedColumns);
-
+// console.log("🧩 Original order from frontend:", originalOrder);
+// console.log("🧩 Current columns detected:", currentCols);
+// console.log("✅ Final ordered columns:", orderedColumns);
 
     return res.json({
       id: freshFile?.id ?? dataFile.id,
@@ -2032,7 +2031,7 @@ console.log("✅ Final ordered columns:", orderedColumns);
       res.setHeader("Content-Disposition", `attachment; filename="${outFileName}"`);
       return res.send(buffer);
     } catch (err) {
-      console.error("❌ Export error:", err);
+     // console.error("❌ Export error:", err);
       res.status(500).json({ message: "Failed to export data", error: String(err) });
     }
   });
