@@ -1,195 +1,423 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { AlertTriangle, AlertCircle, Calendar, Phone, Mail, Copy, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  AlertCircle,
+  Calendar,
+  Phone,
+  Mail,
+  Copy,
+  Trash2,
+  Type,
+  Hash,
+  CaseSensitive,
+  Sparkles,
+  ListChecks,
+  Loader2,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils"; 
+import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SuggestionsSidebarProps {
   fileId?: string;
   issues: any[];
   onDataUpdate: (data: any) => void;
+   originalOrder: string[];
 }
 
-export  function SuggestionsSidebar({ fileId, issues,  onDataUpdate }: SuggestionsSidebarProps) {
+const ISSUE_METHODS: Record<string, string[]> = {
+  missing_values: ["forward_backward", "mean", "median", "mode", "leave_null"],
+  duplicates: ["keep_first", "keep_last", "remove_all"],
+  outliers: ["cap_at_threshold", "replace_with_mean", "remove"],
+  convert_numeric_string: ["to_numeric", "to_string"], 
+};
+
+const ISSUE_UI_MAP: Record<
+  string,
+  {
+    title: string;
+    description: string;
+    actionLabel: string;
+    severity: "high" | "medium" | "low" | "info";
+    operation?: (column?: string, method?: string) => any;
+  }
+> = {
+  missing_values: {
+  title: "Missing Values",
+  description: "Some cells are empty in this column.",
+  actionLabel: "Fill Missing",
+  severity: "high",
+  operation: (column, method) => ({
+    type: "fill_missing",
+    column,
+    strategy: method?.toLowerCase().replace(/\s+/g, "_") || "mode", // ✅ correct key here
+  }),
+},
+  duplicates: {
+    title: "Duplicate IDs or Rows",
+    description: "Duplicate entries found in this column.",
+    actionLabel: "Handle Duplicates",
+    severity: "high",
+    operation: (column, method) => ({
+      type: "handle_duplicates", // ✅ corrected operation
+      column,
+      strategy: method?.toLowerCase().replace(/\s+/g, "_") || "keep_first",
+    }),
+  },
+
+  date_format: {
+    title: "Inconsistent Date Formats",
+    description: "Dates use different formats (e.g., MM/DD/YYYY vs DD/MM/YYYY).",
+    actionLabel: "Standardize Dates",
+    severity: "medium",
+    operation: (column) => ({ type: "standardize_dates", column }),
+  },
+  phone_format: {
+    title: "Invalid Phone Numbers",
+    description: "Some phone numbers are formatted incorrectly.",
+    actionLabel: "Standardize Phones",
+    severity: "high",
+    operation: (column) => ({ type: "standardize_phones", column }),
+  },
+  email_format: {
+    title: "Invalid Email Addresses",
+    description: "Some email entries are malformed.",
+    actionLabel: "Clean Emails",
+    severity: "high",
+    operation: (column) => ({ type: "standardize_emails", column }),
+  },
+  // invalid_numeric: {
+  //   title: "Invalid Numeric Values",
+  //   description: "Some entries aren’t valid numbers for this column.",
+  //   actionLabel: "Convert or Clear",
+  //   severity: "medium",
+  //   operation: (column, method) => ({
+  //     type: "fix_invalid_numeric",
+  //     column,
+  //     method: method?.toLowerCase().replace(/\s+/g, "_") || "replace_with_mean",
+  //   }),
+  // },
+outliers: {
+  title: "Possible Outliers",
+  description: "Some values are much higher or lower than usual.",
+  actionLabel: "Handle Outliers",
+  severity: "medium",
+  operation: (column, method) => ({
+    type: "handle_outliers",
+    column,
+    strategy: method?.toLowerCase().replace(/\s+/g, "_") || "cap_at_threshold", // ✅ fixed
+  }),
+},
+
+invisible_whitespace: {
+    title: "Invisible Whitespaces",
+    description: "Cells with hidden or non-printable spaces detected.",
+    actionLabel: "Remove Invisible Spaces",
+    severity: "low",
+    operation: (column) => ({
+      type: "remove_invisible_whitespace", // ✅ backend-aligned
+      column,
+    }),
+  },
+
+  typos_mislabels: {
+  title: "Typos & Mislabels",
+  description: "Detected spelling mistakes or inconsistent category labels.",
+  actionLabel: "Fix Typos",
+  severity: "medium",
+  operation: (column) => ({
+    type: "fix_typos_mislabels",
+    column,
+  }),
+},
+
+
+mixed_data_types: {
+  title: "Mixed Data Types",
+  description: "Column contains both numeric and text values.",
+  actionLabel: "Convert Data Types",
+  severity: "medium",
+  operation: (column) => ({
+    type: "fix_mixed_data_types",
+    column,
+  }),
+},
+
+
+corrupted_encoding: {
+  title: "Corrupted Encoding",
+  description: "Detected unreadable or malformed text encoding (e.g., 'Ã©' instead of 'é').",
+  actionLabel: "Fix Encoding",
+  severity: "low",
+  operation: (column) => ({
+    type: "fix_corrupted_encoding",
+    column,
+  }),
+},
+
+
+convert_numeric_string: {
+  title: "Numeric/String Conversion Needed",
+  description: "Data type mismatch between numeric and string values.",
+  actionLabel: "Convert Values",
+  severity: "medium",
+  operation: (column, choice) => ({
+    type: "convert_numeric_string",
+    column,
+    choice: choice?.toLowerCase().replace(/\s+/g, "_") || "to_numeric",
+  }),
+},
+  normalize_case: {
+    title: "Inconsistent Text Case",
+    description: "Different text capitalizations found (e.g., 'USA', 'Usa').",
+    actionLabel: "normalize_case",
+    severity: "low",
+    operation: (column) => ({ type: "normalize_case", column }),
+  },
+  normalize_category: {
+    title: "Inconsistent Categories",
+    description: "Similar categories differ slightly (e.g., 'HR', 'Hr').",
+    actionLabel: "normalize_categories",
+    severity: "medium",
+    operation: (column) => ({ type: "normalize_categories", column }),
+  },
+  capitalization_inconsistency: {
+    title: "Capitalization Mismatch",
+    description: "Some category values are inconsistent or misspelled.",
+    actionLabel: "fix_capitalization_inconsistency",
+    severity: "medium",
+    operation: (column) => ({ type: "fix_capitalization_inconsistency", column }),
+  },
+  empty_column: {
+    title: "Empty or Constant Column",
+    description: "This column is empty or constant.",
+    actionLabel: "Remove Column",
+    severity: "low",
+    operation: (column) => ({ type: "remove_empty_column", column }),
+  },
+  header_inconsistency: {
+    title: "Header Formatting Issue",
+    description: "Column names contain spaces or special characters.",
+    actionLabel: "Standardize Headers",
+    severity: "low",
+    operation: () => ({ type: "standardize_headers" }),
+  },
+
+};
+
+export function SuggestionsSidebar({ fileId, issues, onDataUpdate , originalOrder }: SuggestionsSidebarProps) {
   const [fixedIssues, setFixedIssues] = useState<Set<string>>(new Set());
   const [isApplying, setIsApplying] = useState<string | null>(null);
+  const [selectedMethods, setSelectedMethods] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  // create a unique key for each issue (type + column)
-  const getIssueKey = (type: string, column?: string) =>
-    `${type}:${column || "all"}`;                               
+  const getIssueKey = (type: string, column?: string) => `${type}:${column || "all"}`
 
-  const applyFix = async (issueType: string, column?: string) => {
-    const issueKey = getIssueKey(issueType, column);
-    setIsApplying(issueKey);
+ // APPLY FIX BUTTON HANDLER
+
+const applyFix = async (issueType: string, column?: string) => {
+  const issueKey = getIssueKey(issueType, column);
+  const selectedMethod = selectedMethods[issueKey];
+  setIsApplying(issueKey);
+
+  try {
+    const issueMeta = ISSUE_UI_MAP[issueType];
+    const operation = issueMeta?.operation?.(column, selectedMethod);
+
     
-    try {
-      let operation;
-      switch (issueType) {
-        case 'missing_values':
-          operation = { type: 'fill_missing', column, method: 'forward_backward' };
-          break;
-        case 'duplicates':
-          operation = { type: 'remove_duplicates' };
-          break;
-        case 'date_format':
-          operation = { type: 'standardize_dates', column };
-          break;
-        case 'phone_format':
-          operation = { type: 'standardize_phones', column };
-          break;
-        case 'email_format':
-          operation = { type: 'standardize_emails', column };
-          break;
-         case 'empty_column':
-        // If "all" → omit column, else pass column
-        operation = column && column !== "all"
-          ? { type: 'remove_empty_column', column }
-          : { type: 'remove_empty_column' };
-        break;
-        default:
-          return;
-      }
+console.log("🧠 Cleaning Request Sent:", {
+  issueType,
+  column,
+  operation,
+  selectedMethod,
+  
+}); 
 
-      console.log("Using fileId for clean:", fileId);
+    if (!operation) {
+      toast({
+        title: "No Operation Defined",
+        description: `This issue type (${issueType}) doesn't have a defined cleaning step.`,
+      });
+      return;
+    }
 
-      console.log("Sending operation:", operation);
-     
-        // ✅ FIXED: Use environment variable instead of relative /api
     const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-      const response = await fetch(`${apiBase}/api/files/${fileId}/clean`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ operations: [operation] }),
-      });
 
-      if (!response.ok) throw new Error('Failed to apply fix');
+    const response = await fetch(`${apiBase}/api/files/${fileId}/clean`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        operations: [operation],
+        originalOrder: originalOrder
+      }),
+    });
 
-      const data = await response.json();
-      onDataUpdate(data);
-      
-      const newFixedIssues = new Set(fixedIssues);
-      newFixedIssues.add(issueKey);
-      setFixedIssues(newFixedIssues);
+    if (!response.ok) throw new Error("Failed to apply fix");
 
-      toast({
-        title: "Fix applied successfully!",
-        description: `${issueType.replace('_', ' ')} (${column || "all"}) has been resolved.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Failed to apply fix",
-        description: "There was an error processing your request.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsApplying(null);
-    }
+    const data = await response.json();
+
+onDataUpdate({
+  preview: data.updated_preview || data.preview || [],
+  issues: data.updated_issues || data.issues || [],
+  qualityScore: data.updated_quality_score ?? data.qualityScore ?? 0,
+});
+
+
+    const newFixedIssues = new Set(fixedIssues);
+    newFixedIssues.add(issueKey);
+    setFixedIssues(newFixedIssues);
+
+    toast({
+      title: "Fix applied successfully!",
+      description: `${issueType.replace("_", " ")} (${column || "all"}) has been resolved.`,
+    });
+  } catch (error) {
+    toast({
+      title: "Failed to apply fix",
+      description: "There was an error processing your request.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsApplying(null);
+  }
+};
+
+    
+const getIcon = (type: string) => {
+    const map: Record<string, any> = {
+      missing_values: AlertTriangle,
+      duplicates: Copy,
+      date_format: Calendar,
+      phone_format: Phone,
+      email_format: Mail,
+      empty_column: Trash2,
+      category_inconsistency: ListChecks,
+      header_inconsistency: Hash,
+      invalid_numeric: Type,
+      type_mismatch: AlertCircle,
+      text_case: CaseSensitive,
+      outliers: Sparkles,
+      invisible_whitespace: Sparkles,
+      convert_numeric_string: Type,
+      normalize_case: CaseSensitive,
+      normalize_categorise: ListChecks,
+        typos_mislabels: ListChecks,         
+        mixed_data_types: Type,             
+      corrupted_encoding: AlertCircle, 
+    };
+    return map[type] || AlertCircle;
   };
 
-  const getIssueIcon = (type: string) => {
-    switch (type) {
-      case 'missing_values': return AlertTriangle;
-      case 'duplicates': return Copy;
-      case 'date_format': return Calendar;
-      case 'phone_format': return Phone;
-      case 'email_format': return Mail;
-      case 'empty_column': return Trash2; // 👈 NEW ICON
-      default: return AlertCircle;
-    }
+  const getColor = (severity: string) => {
+    const map: Record<string, any> = {
+      high: { border: "border-destructive/40", bg: "bg-destructive/10", btn: "bg-destructive hover:bg-destructive/90" },
+      medium: { border: "border-warning/40", bg: "bg-warning/10", btn: "bg-warning hover:bg-warning/90" },
+      low: { border: "border-muted/40", bg: "bg-muted/10", btn: "bg-muted hover:bg-muted/80" },
+      info: { border: "border-blue-400/40", bg: "bg-blue-100/20", btn: "bg-blue-500 hover:bg-blue-600" },
+    };
+    return map[severity] || { border: "border-border", bg: "bg-card", btn: "bg-primary" };
   };
+const refinedIssues = issues
+  .filter((issue) => {
+    const key = getIssueKey(issue.type, issue.column);
+    return !fixedIssues.has(key); // ✅ hide fixed ones
+  })
+  .map((issue) => {
+    const key = getIssueKey(issue.type, issue.column);
+    return { ...issue, fixed: false };
+  });
 
-  const getIssueColor = (severity: string) => {
-    return severity === 'error' 
-      ? 'border-destructive bg-destructive/10' 
-      : 'border-warning bg-warning/10';
-  };
-
-  const getButtonColor = (severity: string) => {
-    return severity === 'error'
-      ? 'bg-destructive hover:bg-destructive/90'
-      : 'bg-warning hover:bg-warning/90';
-  };
-
-  const progressPercentage = (fixedIssues.size / issues.length) * 100;
+const totalIssues = issues.length;
+const fixedCount = totalIssues - refinedIssues.length;
+const progress = totalIssues ? (fixedCount / totalIssues) * 100 : 0;
 
   return (
     <aside className="w-80 bg-card border-l border-border overflow-y-auto">
       <div className="p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Cleaning Suggestions</h2>
-        
-        <div className="space-y-4">
-         {issues.filter((issue) => !fixedIssues.has(getIssueKey(issue.type, issue.column))).map((issue, index) => {
-    const IconComponent = getIssueIcon(issue.type);
-    const issueKey = getIssueKey(issue.type, issue.column);
-    const isApplyingThis = isApplying === issueKey;
+        <h2 className="text-lg font-semibold mb-4">Cleaning Suggestions</h2>
 
-    return (
-      <div
-        key={`${issue.type}-${issue.column || 'no-column'}-${index}`}
-        className={cn(
-          "rounded-lg p-4 border transition-opacity",
-          getIssueColor(issue.severity)
-        )}
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center">
-            <div className={cn(
-              "w-8 h-8 rounded-full flex items-center justify-center mr-3",
-              issue.severity === 'error' ? 'bg-destructive' : 'bg-warning'
-            )}>
-              <IconComponent className="w-4 h-4 text-white" />
+        <div className="space-y-4">
+          {refinedIssues.map((issue, idx) => {
+            const meta = ISSUE_UI_MAP[issue.type] || {
+              title: issue.type,
+              description: issue.description || "",
+              actionLabel: "Fix",
+               severity: "low",
+            };
+            const Icon = getIcon(issue.type);
+            const key = getIssueKey(issue.type, issue.column);
+            const active = isApplying === key;
+            const color = getColor(meta.severity);
+            const methods = ISSUE_METHODS[issue.type];
+
+            return (
+              <div key={key + idx} className={cn("rounded-lg p-4 border transition-all", color.border, color.bg)}>
+                <div className="flex items-center mb-2">
+                  <div className={cn("w-8 h-8 flex items-center justify-center rounded-full mr-3", color.btn)}>
+                    <Icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">{meta.title}</h3>
+                    {issue.column && (
+                      <p className="text-lg text-muted-foreground">Found in: {issue.column}</p>
+                    )}
+                  </div>
+                </div>
+                <p className="text-sm mb-3">{meta.description}</p>
+
+                {methods && (
+                  <div className="mb-3">
+                    <Select
+                      onValueChange={(value: string) =>
+                        setSelectedMethods((prev) => ({ ...prev, [key]: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select method..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {methods.map((m) => (
+                          <SelectItem key={m} value={m}>
+                            {m}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <Button
+                  onClick={() => applyFix(issue.type, issue.column)}
+                  disabled={active}
+                  className={cn("w-full text-white", color.btn)}
+                  size="sm"
+                >
+                  {active && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+                  {active ? "Applying..." : meta.actionLabel}
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-6 pt-6 border-t border-border">
+          <h3 className="text-sm font-medium mb-3">Cleaning Progress</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Issues Fixed</span>
+              <span>{fixedCount}/{totalIssues}</span>
             </div>
-            <div>
-              <h3 className="font-medium text-foreground">
-                {issue.type.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {issue.column !== 'all' ? `Found in ${issue.column} column` : `${issue.count} found`}
-              </p>
-            </div>
+            <Progress value={progress} className="h-2" />
           </div>
         </div>
-        
-        <p className="text-sm text-foreground mb-3">{issue.description}</p>
-
-        <Button
-          onClick={() => applyFix(issue.type, issue.column)}
-          disabled={isApplyingThis}
-          className={cn(
-            "w-full text-white",
-            getButtonColor(issue.severity)
-          )}
-          size="sm"
-        >
-          {isApplyingThis ? "Applying..." : "Apply Fix"}
-        </Button>
-      </div>
-    );
-  })}
-
-        </div>
-
-      {/* Progress Section */}
-<div className="mt-6 pt-6 border-t border-border">
-  <h3 className="text-sm font-medium text-foreground mb-3">Cleaning Progress</h3>
-  <div className="space-y-2">
-    <div className="flex justify-between text-sm">
-      <span className="text-muted-foreground">Issues Fixed</span>
-      <span className="text-foreground">
-        {fixedIssues.size}/{issues.length + fixedIssues.size}
-      </span>
-    </div>
-    <Progress
-      value={
-        (fixedIssues.size / (issues.length + fixedIssues.size)) * 100
-      }
-      className="h-2"
-    />
-      </div>
-      </div>
       </div>
     </aside>
   );

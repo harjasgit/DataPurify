@@ -3,32 +3,43 @@
   "private": true,
   "type": "module",
   "scripts": {
-  "dev": "node --loader ts-node/esm index.ts",
-  "build": "tsc",
-  "start": "node dist/server/index.js"
+    "dev": "node --loader ts-node/esm index.ts",
+    "build": "tsc",
+    "start": "node dist/server/index.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.38.0",
+    "@paypal/checkout-server-sdk": "^1.0.3",
+    "@paypal/paypal-server-sdk": "^2.0.0",
+    "@supabase/supabase-js": "^2.86.0",
     "busboy": "^1.6.0",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
+    "crypto": "^1.0.1",
+    "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
     "express": "^4.21.2",
+    "fast-levenshtein": "^3.0.0",
+    "jaro-winkler": "^0.2.8",
     "nanoid": "^5.1.5",
+    "natural": "^8.1.0",
+    "papaparse": "^5.5.3",
+    "razorpay": "^2.9.6",
+    "string-similarity": "^4.0.4",
     "xlsx": "^0.18.5",
     "zod": "^4.1.5"
   },
   "devDependencies": {
     "@types/busboy": "^1.5.4",
     "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.23",
-    "@types/node": "^20.19.13",
+    "@types/express": "^4.17.25",
+    "@types/node": "^20.19.25",
+    "@types/papaparse": "^5.3.16",
+    "@types/string-similarity": "^4.0.2",
     "cross-env": "^10.0.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "vite": "^7.1.4"
   }
 }

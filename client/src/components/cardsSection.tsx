@@ -1,46 +1,47 @@
-import { Zap, Eraser, BarChart3, Download } from "lucide-react";
+import { Zap, Eraser, Shuffle, Link2 } from "lucide-react";
+import { PricingSection } from "./paymentCard";
 
 const features = [
   {
     id: 1,
-    icon: <Zap className="w-8 h-8 text-primary" />,
-    title: "Fast Cleaning",
-    desc: "Process thousands of rows in seconds with our optimized cleaning engine.",
-    badge: "Lightning Speed",
+    icon: <Eraser className="w-8 h-8 text-primary" />,
+    title: "Automated Data Cleaning",
+    desc: "Instantly clean messy datasets fix errors, missing values, and inconsistency in seconds.",
+    badge: "Auto Clean",
   },
   {
     id: 2,
-    icon: <Eraser className="w-8 h-8 text-primary" />,
-    title: "Remove Duplicates",
-    desc: "Eliminate duplicate entries automatically and keep only clean records.",
-    badge: "AI Powered",
+    icon: <Zap className="w-8 h-8 text-primary" />,
+    title: "Smart Duplicate Detection",
+    desc: "Identify and remove exact & fuzzy duplicates with intelligent similarity based matching.",
+    badge: "AI Matching",
   },
   {
     id: 3,
-    icon: <BarChart3 className="w-8 h-8 text-primary" />,
-    title: "Smart Formatting",
-    desc: "Standardize dates, names, and numbers automatically for consistency.",
-    badge: "Smart Engine",
+    icon: <Shuffle className="w-8 h-8 text-primary" />,
+    title: "Auto Data Standardization",
+    desc: "Standardize names, dates, emails, and formats into a clean, unified structure automatically.",
+    badge: "Smart Format",
   },
   {
     id: 4,
-    icon: <Download className="w-8 h-8 text-primary" />,
-    title: "Instant Export",
-    desc: "Download cleaned datasets instantly in your preferred format.",
-    badge: "1-Click Export",
+    icon: <Link2 className="w-8 h-8 text-primary" />,
+    title: "Cross-File Record Matching",
+    desc: "Match records between two datasets even when fields don’t align or values differ slightly.",
+    badge: "Pro Feature",
   },
 ];
 
 export default function CardsSection() {
   return (
-    <section className="w-full py-16">
+    <section className="w-full py-16" id="features-section">
       {/* Heading */}
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-foreground">
           Why Choose <span className="text-primary">DataPurify?</span>
         </h2>
         <p className="text-muted-foreground mt-3 max-w-2xl mx-auto text-lg">
-          Powerful tools to clean, format, and export your data effortlessly.
+          Our smart automation helps you clean, standardize, and match data with zero manual effort.
         </p>
       </div>
 
@@ -78,3 +79,7 @@ export default function CardsSection() {
     </section>
   );
 }
+
+<section>
+  <PricingSection/>
+</section>
