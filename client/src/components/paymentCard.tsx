@@ -139,9 +139,8 @@ export const PricingSection: React.FC = () => {
               {/* PayPal container */}
               {plan.name === "Pro" && showPayPal && (
                 <div className="mt-6">
-                  <PayPalSubscription 
-                    userId={user?.id}
-                    onSuccess={handleSuccess}
+                  <PayPalSubscription
+                    {...({ userId: user?.id, planId: import.meta.env.VITE_PAYPAL_PLAN_ID, onSuccess: handleSuccess } as any)}
                   />
                 </div>
               )}
