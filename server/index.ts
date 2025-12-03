@@ -28,8 +28,9 @@ console.log("🟦 PayPal env:", {
 
 const PAYPAL_BASE =
   NODE_ENV === "production"
-    ? "https://api-m.sandbox.paypal.com"
-    :  "https://api-m.paypal.com";
+    ? "https://api-m.paypal.com"      // LIVE
+    : "https://api-m.sandbox.paypal.com"; // SANDBOX
+
 
 // -------------------- HELPERS --------------------
 async function getPayPalAccessToken(): Promise<string | null> {
