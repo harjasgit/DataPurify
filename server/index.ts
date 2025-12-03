@@ -4,6 +4,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import recordLinkageRouter from "./recordLinkageRoutes.js"; // keep your other routes
+import { registerRoutes } from "./routes.js";
 
 // -------------------- ENV / SUPABASE --------------------
 const SUPABASE_URL = process.env.SUPABASE_URL!;
@@ -110,7 +111,7 @@ const startServer = async () => {
   );
 
   // Important: keep JSON parser for general routes
-  app.use(express.json());
+   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
 
   // But the webhook route requires RAW body. We'll mount a raw parser specifically for it below.
@@ -118,6 +119,7 @@ const startServer = async () => {
 
   // Keep your other routes
   app.use("/", recordLinkageRouter);
+  registerRoutes(app);
 
   // -------------------- CREATE SUBSCRIPTION --------------------
   // Create subscription on PayPal for a user (returns subscription id and approve link if present)

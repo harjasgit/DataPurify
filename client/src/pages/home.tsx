@@ -83,7 +83,7 @@ const handleFileUpload = async (file: File) => {
       method: "POST",
       body: formData,
     });
-
+   
     const text = await res.text();
     let data: any;
     try {
