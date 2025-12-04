@@ -15,14 +15,12 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Papa from "papaparse";
-import "@/index.css"; // ensure CSS file for scrollbar styles is imported
+import "@/index.css";
 import { useUser } from "@/context/userContext";
-
 
 const RecordUI: React.FC = () => {
   const [match, params] = useRoute("/record-linkage/:id");
   const id = params?.id;
-  const { plan: userPlan } = useUser();
 
   const [fileAData, setFileAData] = useState<any[]>([]);
   const [fileBData, setFileBData] = useState<any[]>([]);
@@ -49,9 +47,7 @@ const RecordUI: React.FC = () => {
         );
         setFileAData(res.data.fileAData || []);
         setFileBData(res.data.fileBData || []);
-      } catch (err) {
-        
-      }
+      } catch (err) {}
     };
 
     fetchFiles();
@@ -74,12 +70,11 @@ const RecordUI: React.FC = () => {
         { id, mapping, mode }
       );
 
-
-const { exact, possible, unmatched, summary } = res.data;
- setExactMatches(exact || []);
+      const { exact, possible, unmatched, summary } = res.data;
+      setExactMatches(exact || []);
       setPossibleMatches(possible || []);
-     setUnmatched(unmatched || []);
-     setSummary(summary || null);
+      setUnmatched(unmatched || []);
+      setSummary(summary || null);
 
       setTimeout(() => matchesRef.current?.scrollIntoView({ behavior: "smooth" }), 500);
     } catch (err) {
@@ -121,7 +116,6 @@ const { exact, possible, unmatched, summary } = res.data;
 
     return (
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-        {/* 🔥 Header removed and smooth, scrollbar hidden */}
         <div className="overflow-x-auto overflow-y-auto max-h-[500px] no-scrollbar scroll-smooth">
           <table className="min-w-full text-sm text-foreground">
             <thead className="bg-muted text-muted-foreground sticky top-0">
@@ -165,7 +159,7 @@ const { exact, possible, unmatched, summary } = res.data;
     if (!matches.length)
       return <div className="text-muted-foreground italic text-center p-4">No records</div>;
 
-    const columns = Object.keys(matches[0].rowA|| {});
+    const columns = Object.keys(matches[0].rowA || {});
     const visibleRows = 50;
 
     return (
@@ -250,75 +244,30 @@ const { exact, possible, unmatched, summary } = res.data;
         </div>
       )}
 
-     {/* Algorithm Mode Selector */}
-<div className="flex justify-center gap-4 mb-8 relative">
+      {/* Algorithm Mode Selector */}
+      <div className="flex justify-center gap-4 mb-8 relative">
 
-  {/* Smart Match - Free */}
-  <Button
-    variant={mode === "default" ? "default" : "outline"}
-    onClick={() => setMode("default")}
-  >
-    <Brain className="w-4 h-4 mr-2" /> Smart Match
-  </Button>
+        <Button
+          variant={mode === "default" ? "default" : "outline"}
+          onClick={() => setMode("default")}
+        >
+          <Brain className="w-4 h-4 mr-2" /> Smart Match
+        </Button>
 
-  {/* Advanced Match - Locked for Free Users */}
-  <div className="relative">
-    <Button
-      variant={mode === "advanced" ? "default" : "outline"}
-      onClick={() => {
-        if (userPlan === "free") return; // BLOCK click
-        setMode("advanced");
-      }}
-      className={userPlan === "free" ? "opacity-40 cursor-not-allowed" : ""}
-    >
-      <Gauge className="w-4 h-4 mr-2" /> Advanced Match
-    </Button>
+        <Button
+          variant={mode === "advanced" ? "default" : "outline"}
+          onClick={() => setMode("advanced")}
+        >
+          <Gauge className="w-4 h-4 mr-2" /> Advanced Match
+        </Button>
 
-    {userPlan === "free" && (
-      <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] rounded-lg flex items-center justify-center z-10">
-        <div className="flex flex-col items-center">
-          <ShieldCheck className="w-4 h-4 text-white-600 mb-1" />
-          <button
-            onClick={() => window.location.href = "/#pricing"}
-            className="text-s text-white-600 "
-          >
-            Upgrade to Pro
-          </button>
-        </div>
+        <Button
+          variant={mode === "strict" ? "default" : "outline"}
+          onClick={() => setMode("strict")}
+        >
+          <ShieldCheck className="w-4 h-4 mr-2" /> Strict Match
+        </Button>
       </div>
-    )}
-  </div>
-
-  {/* Strict Match - Locked for Free Users */}
-  <div className="relative">
-    <Button
-      variant={mode === "strict" ? "default" : "outline"}
-      onClick={() => {
-        if (userPlan === "free") return; // BLOCK click
-        setMode("strict");
-      }}
-      className={userPlan === "free" ? "opacity-40 cursor-not-allowed" : ""}
-    >
-      <ShieldCheck className="w-4 h-4 mr-2" /> Strict Match
-    </Button>
-
-    {userPlan === "free" && (
-      <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] rounded-lg flex items-center justify-center z-10">
-        <div className="flex flex-col items-center">
-          <ShieldCheck className="w-4 h-4 text-white-600 mb-1" />
-          <button
-            onClick={() => window.location.href = "/pricing"}
-            className="text-s text-white-600"
-          >
-            Upgrade to Pro
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-
-</div>
-
 
       {/* File Tables */}
       {fileAData.length > 0 && fileBData.length > 0 && (
@@ -339,7 +288,6 @@ const { exact, possible, unmatched, summary } = res.data;
         </div>
       )}
 
-      {/* Run Button */}
       <div className="flex justify-center mt-10">
         <Button
           onClick={handleLinkage}
@@ -358,7 +306,6 @@ const { exact, possible, unmatched, summary } = res.data;
         </Button>
       </div>
 
-      {/* Results */}
       <div ref={matchesRef} className="mt-12 space-y-6">
         {summary && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -382,7 +329,6 @@ const { exact, possible, unmatched, summary } = res.data;
         </Tabs>
       </div>
 
-      {/* Overlay */}
       {loading && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center backdrop-blur-sm z-50">
           <div className="bg-card text-card-foreground p-6 rounded-xl shadow-lg flex items-center space-x-3">
