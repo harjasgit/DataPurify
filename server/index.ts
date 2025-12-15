@@ -3,8 +3,9 @@ import "dotenv/config";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
-import recordLinkageRouter from "./recordLinkageRoutes.js"; // keep your other routes
+//import recordLinkageRouter from "./recordLinkageRoutes.js"; // keep your other routes
 import { registerRoutes } from "./routes.js";
+import betaCodeRouter from "./betaCode.js";
 
 // -------------------- ENV / SUPABASE --------------------
 const SUPABASE_URL = process.env.SUPABASE_URL!;
@@ -119,8 +120,9 @@ const startServer = async () => {
   // (Can't use express.json for webhook verification rawBody)
 
   // Keep your other routes
-  app.use("/", recordLinkageRouter);
+  //app.use("/", recordLinkageRouter);
   registerRoutes(app);
+  app.use("/api", betaCodeRouter);
 
   // -------------------- CREATE SUBSCRIPTION --------------------
   // Create subscription on PayPal for a user (returns subscription id and approve link if present)

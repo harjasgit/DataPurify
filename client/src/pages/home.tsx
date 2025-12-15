@@ -260,12 +260,12 @@ const handleFullScreen = () => {
         {/* LEFT SIDE */}
         <div className="flex flex-col items-start text-left max-w-lg">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-snug mb-4">
-            Clean, standardize & link your data automatically with just{" "}
+            Clean, standardize & format your data automatically with just{" "}
             <span className="text-primary">one click!</span>
           </h2>
 
           <p className="text-muted-foreground mb-6 text-base md:text-lg">
-            Upload your dataset and watch DataPurify clean, deduplicate,
+            Upload your dataset and watch DataPurify clean, standardize,
             validate, and format it — automatically.
           </p>
 
@@ -299,7 +299,7 @@ const handleFullScreen = () => {
   >
     <video
       ref={videoRef}
-      src="/Saas.mp4"
+      src="/saass.mp4"
       className="w-full h-full object-cover"
       autoPlay
       muted
@@ -326,7 +326,7 @@ const handleFullScreen = () => {
 
       {/* ---------------- PRICING SECTION ---------------- */}
       <section className="w-full max-w-7xl mx-auto mt-24 px-6">
-        <PricingSection />
+          <PricingSection />  
       </section>
 
     </div>
@@ -352,9 +352,7 @@ const handleFullScreen = () => {
               key={fileData.id}
               data={fileData.preview ?? []}
               issues={fileData.issues ?? []}
-              smartPreview={smartPreview}
               totalRows={fileData.rowCount ?? 0}
-               plan={plan}
               />
                 </div>
               )}

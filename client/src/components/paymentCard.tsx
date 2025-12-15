@@ -1,151 +1,152 @@
 import React, { useState } from "react";
-import { CheckCircle2, Sparkles, Rocket } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CheckCircle2, Sparkles } from "lucide-react";
 import { useUser } from "@/context/userContext";
-import PayPalSubscription from "@/components/payPalCheckout";
-
-// PLAN CONFIG
-const plans = [
-  {
-    name: "Free",
-    priceUSD: "$0 / mo",
-    icon: <Sparkles className="w-6 h-6 text-primary" />,
-    description: "Perfect for trying out data cleaning and record linkage.",
-    sections: [
-      {
-        title: "Data Cleaning",
-        features: [
-          "Upload up to 5 files (CSV/Excel, 20MB each)",
-          "Limited Exports",
-          "Preview limited to 50 rows",
-          "No Smart Preview",
-        ],
-      },
-      {
-        title: "Record Linkage",
-        features: [
-          "Manual field mapping (drag & drop)",
-          "Basic smart matching (lightweight fuzzy matching)",
-          "Limited export of linked results",
-        ],
-      },
-    ],
-    buttonText: "Start for Free",
-    highlight: false,
-  },
-  {
-    name: "Pro",
-    priceUSD: "$6 / mo",
-    icon: <Rocket className="w-6 h-6 text-primary" />,
-    description: "For data professionals who want automation and accuracy.",
-    sections: [
-      {
-        title: "Data Cleaning",
-        features: [
-          "Unlimited uploads (up to 50MB each)",
-          "Full Smart Preview (no row limit)",
-          "Unlimited Export",
-        ],
-      },
-      {
-        title: "Record Linkage",
-        features: [
-          "Advanced matching (high-accuracy fuzzy match)",
-          "Strict rule-based exact matching",
-          "Unlimited Export",
-        ],
-      },
-    ],
-    buttonText: "Upgrade to Pro",
-    highlight: true,
-  },
-];
+import { toast } from "@/hooks/use-toast";
 
 export const PricingSection: React.FC = () => {
-  const { user } = useUser();
-  const [showPayPal, setShowPayPal] = useState(false);
+  const { user} = useUser();
+  const [showCodeInput, setShowCodeInput] = useState(false);
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const openPayPal = () => {
-    if (!user?.id) {
-      alert("Please log in to upgrade.");
-      return;
+  // ============================
+  // VERIFY BETA CODE HANDLER
+  // ============================
+  const handleVerify = async () => {
+    if (!user) return alert("Please sign up first!");
+    if (!code.trim()) return alert("Enter your beta code");
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/verify-beta-code`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: user.id,
+            code,
+          }),
+        }
+      );
+
+      const json = await res.json();
+
+      if (json.valid) {
+          toast({
+         title: "🎉 Beta Access Activated",
+         description: "You can now upload files.",
+        });
+
+        
+      //  await refreshUser();
+
+
+        setShowCodeInput(false); // hide input
+        setCode(""); // reset input
+      } else {
+        alert(json.error || "Invalid beta code");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Verification failed");
     }
-    setShowPayPal(true);
-  };
 
-  const handleSuccess = () => {
-    alert("🎉 Subscription successful! You are now a PRO user.");
-    setShowPayPal(false);
+    setLoading(false);
   };
 
   return (
-    <section className="py-20 bg-muted/20" id="pricing-section">
-      <div className="max-w-6xl mx-auto px-6 text-center">
+    <section className="py-28 relative" id="pricing-section">
+      <div className="relative max-w-4xl mx-auto px-6 text-center">
+
         <h2 className="text-3xl font-bold text-foreground mb-3">
           Simple, Transparent <span className="text-primary">Pricing</span>
         </h2>
 
-        <p className="text-muted-foreground mb-10">
-          Choose the plan that fits your data workflow — no hidden fees.
+        <p className="text-muted-foreground mt-3 text-lg">
+          We're currently in <span className="text-primary font-medium">Beta Mode</span>.
+          Enjoy full access while we refine the experience.
         </p>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {plans.map((plan, i) => (
-            <div
-              key={i}
-              className={`rounded-2xl border p-6 flex flex-col shadow-sm ${
-                plan.highlight ? "border-primary" : ""
-              }`}
-            >
-              <div>
-                <div className="flex justify-center mb-4">{plan.icon}</div>
-
-                <h3 className="text-xl font-semibold mb-1">{plan.name}</h3>
-
-                <p className="text-muted-foreground mb-4">
-                  {plan.description}
-                </p>
-
-                <p className="text-3xl font-bold text-primary mb-4">
-                  {plan.priceUSD}
-                </p>
-
-                {plan.sections.map((section, idx) => (
-                  <div key={idx} className="text-left mb-4">
-                    <h4 className="font-semibold text-primary mb-2">
-                      {section.title}
-                    </h4>
-
-                    <ul className="space-y-2 text-muted-foreground">
-                      {section.features.map((f, j) => (
-                        <li key={j} className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-primary" />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                variant={plan.highlight ? "default" : "outline"}
-                className="w-full mt-4"
-                onClick={plan.name === "Pro" ? openPayPal : undefined}
-              >
-                {plan.buttonText}
-              </Button>
-
-              {/* PayPal container */}
-              {plan.name === "Pro" && showPayPal && (
-                <div className="mt-6">
-                  <PayPalSubscription
-                    {...({ userId: user?.id, planId: import.meta.env.VITE_PAYPAL_PLAN_ID, onSuccess: handleSuccess } as any)}
-                  />
-                </div>
-              )}
+        {/* SINGLE CARD */}
+        <div className="mt-16 flex justify-center">
+          <div className="
+              w-full max-w-md p-8 rounded-3xl border border-white/10
+              bg-[#0f0f17] shadow-xl transition-all duration-300
+            "
+          >
+            <div className="flex justify-center mb-4">
+              <Sparkles className="w-10 h-10 text-primary" />
             </div>
-          ))}
+
+            <h3 className="text-2xl font-semibold text-foreground">
+              Basic Plan
+            </h3>
+
+            <p className="text-4xl font-bold text-primary mt-2">
+              $6 / mo
+            </p>
+
+            <p className="mt-2 inline-block px-4 py-1 text-xs rounded-full bg-primary/10 text-primary font-medium">
+              Full Beta Access
+            </p>
+
+            <ul className="mt-8 space-y-2 text-left text-sm text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" /> Unlimited uploads (20MB)
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" /> Full Smart Preview — Live Cleaning
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" /> No row limits
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" /> Unlimited export
+              </li>
+            </ul>
+
+            {/* BETA CODE BUTTON */}
+            {!showCodeInput && (
+              <button
+                onClick={() => setShowCodeInput(true)}
+                className="
+                  w-full mt-8 py-3 rounded-xl bg-primary text-white 
+                  font-medium hover:bg-primary/90 transition-all
+                "
+              >
+                Have a Beta Code?
+              </button>
+            )}
+
+            {/* CODE INPUT FIELD */}
+            {showCodeInput && (
+              <div className="mt-8 flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter beta code"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  className="
+                    flex-1 px-4 py-3 rounded-xl bg-black/30 border border-white/10 
+                    text-white placeholder-gray-400 outline-none focus:border-primary
+                  "
+                />
+
+                <button
+                  onClick={handleVerify}
+                  disabled={loading}
+                  className="
+                    px-5 py-3 rounded-xl bg-primary text-white 
+                    font-medium hover:bg-primary/90 transition-all
+                  "
+                >
+                  {loading ? "..." : "Verify"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

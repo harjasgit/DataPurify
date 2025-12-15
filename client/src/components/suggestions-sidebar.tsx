@@ -36,8 +36,7 @@ interface SuggestionsSidebarProps {
 const ISSUE_METHODS: Record<string, string[]> = {
   missing_values: ["forward_backward", "mean", "median", "mode", "leave_null"],
   duplicates: ["keep_first", "keep_last", "remove_all"],
-  outliers: ["cap_at_threshold", "replace_with_mean", "remove"],
-  convert_numeric_string: ["to_numeric", "to_string"], 
+  outliers: ["cap_at_threshold", "replace_with_mean", "remove"], 
 };
 
 const ISSUE_UI_MAP: Record<
@@ -163,7 +162,6 @@ corrupted_encoding: {
   }),
 },
 
-
 convert_numeric_string: {
   title: "Numeric/String Conversion Needed",
   description: "Data type mismatch between numeric and string values.",
@@ -175,6 +173,8 @@ convert_numeric_string: {
     choice: choice?.toLowerCase().replace(/\s+/g, "_") || "to_numeric",
   }),
 },
+
+
   normalize_case: {
     title: "Inconsistent Text Case",
     description: "Different text capitalizations found (e.g., 'USA', 'Usa').",

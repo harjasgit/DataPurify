@@ -11,7 +11,6 @@ type UploadTriggerButtonProps = {
 
 export function UploadTriggerButton({
   onCleanUpload,
-  onRecordLinkageUpload,
   onOpenChange
 }: UploadTriggerButtonProps) {
   const [open, setOpen] = useState(false);
@@ -24,10 +23,8 @@ export function UploadTriggerButton({
       <UploadChoiceModal
         open={open}
         onClose={() => setOpen(false)}
-         onOpenChange={onOpenChange}  
         onCleanUpload={onCleanUpload}
-        onRecordLinkageUpload={onRecordLinkageUpload}
-      />
+              />
     </>
   );
 }

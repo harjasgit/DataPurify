@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 interface UserContextType {
   user: any;
+ // refreshUser: () => Promise<void>;
   displayName: string;
   avatarUrl: string | null;
   plan: "free" | "pro";
@@ -183,16 +184,32 @@ useEffect(() => {
     setCreatedAt(null);
   };
 
+//refresh user data
+  // const refreshUser = async () => {
+  //   const { data } = await supabase
+  //     .from("user_uploads")
+  //     .select("*")
+  //     .eq("id", user?.id)
+  //     .single();
+
+  //   if (data) setUser(data);
+  // };
+
+  const betaAccess = user?.user_metadata?.beta_access === true;
+
+
+
   return (
     <UserContext.Provider
       value={{
-        user,
+        user : user ? { ...user, beta_access: betaAccess } : null,
         displayName,
         avatarUrl,
         plan,
         uploads,
         createdAt,
         showAuthModal,
+       // refreshUser,
         setShowAuthModal,
         openAuthModal: () => setShowAuthModal(true),
         closeAuthModal: () => setShowAuthModal(false),

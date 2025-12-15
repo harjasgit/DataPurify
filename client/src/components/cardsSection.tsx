@@ -1,34 +1,31 @@
-import { Zap, Eraser, Shuffle, Link2 } from "lucide-react";
+import { Zap, Eraser, BarChart2, Download } from "lucide-react";
 import { PricingSection } from "./paymentCard";
-
 const features = [
   {
     id: 1,
-    icon: <Eraser className="w-8 h-8 text-primary" />,
-    title: "Automated Data Cleaning",
-    desc: "Instantly clean messy datasets fix errors, missing values, and inconsistency in seconds.",
-    badge: "Auto Clean",
+    icon: <Zap className="w-8 h-8 text-primary" />,
+    title: "Fast Cleaning",
+    desc: "Process thousands of rows in seconds with our optimized cleaning engine.",
+    
   },
   {
     id: 2,
-    icon: <Zap className="w-8 h-8 text-primary" />,
-    title: "Smart Duplicate Detection",
-    desc: "Identify and remove exact & fuzzy duplicates with intelligent similarity based matching.",
-    badge: "AI Matching",
+    icon: <Eraser className="w-8 h-8 text-primary" />,
+    title: "Remove Duplicates",
+    desc: "Eliminate duplicate entries automatically and keep only clean records.",
+    
   },
   {
     id: 3,
-    icon: <Shuffle className="w-8 h-8 text-primary" />,
-    title: "Auto Data Standardization",
-    desc: "Standardize names, dates, emails, and formats into a clean, unified structure automatically.",
-    badge: "Smart Format",
+    icon: <BarChart2 className="w-8 h-8 text-primary" />,
+    title: "Smart Formatting",
+    desc: "Standardize dates, names, and numbers automatically for consistency.",
   },
   {
     id: 4,
-    icon: <Link2 className="w-8 h-8 text-primary" />,
-    title: "Cross-File Record Matching",
-    desc: "Match records between two datasets even when fields don’t align or values differ slightly.",
-    badge: "Pro Feature",
+    icon: <Download className="w-8 h-8 text-primary" />,
+    title: "Instant Export",
+    desc: "Download cleaned datasets instantly in your preferred format.",
   },
 ];
 
@@ -41,7 +38,7 @@ export default function CardsSection() {
           Why Choose <span className="text-primary">DataPurify?</span>
         </h2>
         <p className="text-muted-foreground mt-3 max-w-2xl mx-auto text-lg">
-          Our smart automation helps you clean, standardize, and match data with zero manual effort.
+          Powerful tool to clean, format, and export your data effortlessly.
         </p>
       </div>
 
@@ -70,7 +67,7 @@ export default function CardsSection() {
 
               {/* Badge */}
               <span className="mt-4 px-4 py-1 text-xs rounded-full bg-primary/10 text-primary font-medium">
-                {f.badge}
+                
               </span>
             </div>
           ))}
@@ -79,7 +76,4 @@ export default function CardsSection() {
     </section>
   );
 }
-
-<section>
-  <PricingSection/>
-</section>
+ <PricingSection /> 

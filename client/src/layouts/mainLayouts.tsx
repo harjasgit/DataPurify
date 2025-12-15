@@ -5,6 +5,7 @@ import { Moon, Sun, Database, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import AuthForm from "@/components/authForm";
+import BetaPromoBanner from "@/components/promoBeta";
 
 import {
   DropdownMenu,
@@ -31,8 +32,10 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
     logout,
   } = useUser();
 
+  
   return (
     <div className="min-h-screen flex flex-col bg-background">
+        <BetaPromoBanner />
       <header className="bg-card border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -49,7 +52,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
             </div>
 
             {/* Desktop Nav */}
-            <div className="hidden md:flex space-x-8">
+            { <div className="hidden md:flex space-x-8">
               <a href="/#pricing-section">
                 <Button variant="ghost">Pricing</Button>
               </a>
@@ -59,7 +62,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
               <a href="/#contact-section">
               <Button variant="ghost">Contact Us</Button>
             </a>
-            </div>
+            </div> }
 
             {/* Right Section */}
             <div className="flex items-center space-x-6">
