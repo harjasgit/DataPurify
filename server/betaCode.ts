@@ -1,45 +1,31 @@
 // betaCode.ts
+// PRODUCTION-READY FREE BETA FLOW (MAILTO BASED – NO EMAIL SERVICE)
+// ---------------------------------------------------------------
+// ✔ No domain required
+// ✔ No Resend / Nodemailer
+// ✔ Trusted: beta codes are sent manually via Gmail
+
 import express from "express";
-import { Resend } from "resend";
 import { betaCodesStorage } from "./betaCodesStorage.js";
 
 const router = express.Router();
-const resend = new Resend(process.env.RESEND_API_KEY);
 
-async function sendEmail({
-  to,
-  subject,
-  html,
-}: {
-  to: string;
-  subject: string;
-  html: string;
-}) {
-  try {
-    await resend.emails.send({
-      from: process.env.FROM_EMAIL!, // onboarding@resend.dev
-      to,
-      subject,
-      html,
-    });
-
-    console.log("📧 Email sent to", to);
-  } catch (err) {
-    console.error("❌ Email failed (Resend):", err);
-  }
-}
-
-
-// ----------------------
+// --------------------------------------------------
 // Helper: generate random beta code
-// ----------------------
+// --------------------------------------------------
 function generateBetaCode() {
   return "DP-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-// =====================================================
-// 1️⃣  ROUTE — REQUEST BETA CODE
-// =====================================================
+// ==================================================
+// 1️⃣ REQUEST BETA CODE
+// ==================================================
+// Frontend flow:
+// - User clicks "Request Beta Code"
+// - Frontend opens mailto:datapurify@gmail.com
+// - User sends email manually
+// - YOU reply with the generated beta code
+
 router.post("/request-beta-code", async (req, res) => {
   const { user_id, email } = req.body;
 
@@ -51,8 +37,7 @@ router.post("/request-beta-code", async (req, res) => {
 
   if (existing) {
     return res.json({
-      message: "Code already exists",
-      code: existing.code,
+      message: "Beta request already exists. Please check your email.",
     });
   }
 
@@ -65,26 +50,21 @@ router.post("/request-beta-code", async (req, res) => {
     return res.status(500).json({ error: "Database insert failed" });
   }
 
-  // ✅ respond immediately
-  res.json({ message: "Beta code sent", code });
+  // IMPORTANT:
+  // ❌ Do NOT send email from backend
+  // ✔ User will receive code from datapurify@gmail.com manually
 
-  // ✅ send email async (non-blocking)
-  sendEmail({
-    to: email,
-    subject: "🎉 Your DataPurify Beta Access Code",
-    html: `
-      <h2>Welcome to DataPurify Beta!</h2>
-      <p>Your unique access code:</p>
-      <h3 style="font-size:24px;letter-spacing:2px">${code}</h3>
-      <p>Enter this code on the Pricing page to unlock full Beta Access.</p>
-      <p>Thank you for being an early tester 🚀</p>
-    `,
+  return res.json({
+    message:
+      "Beta request received. Our team will email your access code shortly.",
   });
 });
 
-// =====================================================
-// 2️⃣  ROUTE — VERIFY BETA CODE  (NEW)
-// =====================================================
+// ==================================================
+// 2️⃣ VERIFY BETA CODE
+// ==================================================
+// User pastes the code they received via Gmail
+
 router.post("/verify-beta-code", async (req, res) => {
   const { user_id, code } = req.body;
 
@@ -96,11 +76,20 @@ router.post("/verify-beta-code", async (req, res) => {
     const stored = await betaCodesStorage.getExistingCode(user_id);
 
     if (!stored) {
-      return res.status(404).json({ error: "No beta code found" });
+      return res.status(404).json({ error: "No beta request found" });
+    }
+
+    if (stored.is_used) {
+      return res.json({
+        valid: true,
+        message: "Beta already activated",
+      });
     }
 
     if (stored.code !== code) {
-      return res.status(400).json({ valid: false, error: "Invalid beta code" });
+      return res
+        .status(400)
+        .json({ valid: false, error: "Invalid beta code" });
     }
 
     await betaCodesStorage.markUsed(code);
@@ -108,7 +97,7 @@ router.post("/verify-beta-code", async (req, res) => {
 
     return res.json({
       valid: true,
-      message: "Beta code verified. Access granted.",
+      message: "Beta access granted 🎉",
     });
   } catch (err) {
     console.error("Verify error:", err);
@@ -116,16 +105,16 @@ router.post("/verify-beta-code", async (req, res) => {
   }
 });
 
-
-// =====================================================
-// 3️⃣ ROUTE — SEND FEEDBACK AFTER FIRST UPLOAD
-// =====================================================
+// ==================================================
+// 3️⃣ POST-FIRST-UPLOAD (NO EMAIL – JUST TRACKING)
+// ==================================================
+// Feedback is collected via in-app link / Google Form
 
 router.post("/post-first-upload", async (req, res) => {
-  const { user_id, email } = req.body;
+  const { user_id } = req.body;
 
-  if (!user_id || !email) {
-    return res.status(400).json({ error: "Missing user_id or email" });
+  if (!user_id) {
+    return res.status(400).json({ error: "Missing user_id" });
   }
 
   try {
@@ -136,37 +125,18 @@ router.post("/post-first-upload", async (req, res) => {
     }
 
     if (record.feedback_sent) {
-      return res.json({ message: "Feedback already sent" });
+      return res.json({ message: "Feedback already recorded" });
     }
-
-    // respond first
-    res.json({ message: "Feedback email sent" });
-
-    // send email async
-    sendEmail({
-      to: email,
-      subject: "💬 Quick feedback on DataPurify?",
-      html: `
-        <h2>How was your first experience?</h2>
-        <p>You just used <strong>DataPurify</strong> 🎉</p>
-        <p>We’d love a quick 30-second review.</p>
-
-        <a href="https://forms.gle/cZ4mLRnv2xMapm628"
-          style="background:#6d5bff;color:white;padding:12px 20px;
-          text-decoration:none;border-radius:6px;display:inline-block;">
-          ⭐ Give Feedback
-        </a>
-
-        <p>Thank you for helping us improve 🙌</p>
-      `,
-    });
 
     await betaCodesStorage.markFirstUpload(user_id);
     await betaCodesStorage.markFeedbackSent(user_id);
 
+    return res.json({
+      message: "First upload tracked. Feedback pending.",
+    });
   } catch (err) {
-    console.error("Feedback trigger error:", err);
-    return res.status(500).json({ error: "Failed to send feedback" });
+    console.error("Post-upload error:", err);
+    return res.status(500).json({ error: "Failed to track upload" });
   }
 });
 
