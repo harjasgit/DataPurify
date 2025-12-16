@@ -33,6 +33,62 @@ function isEmptyValue(val: any): boolean {
   return false;
 }
 
+//helpers for duplicate detection
+
+
+// ---------- Numeric-like detection ----------
+function isNumericLikeColumn(values: any[], threshold = 0.6) {
+  let numeric = 0;
+  let total = 0;
+
+  for (const v of values) {
+    if (v === null || v === undefined || v === "") continue;
+    total++;
+    if (!isNaN(Number(v))) numeric++;
+  }
+
+  return total > 0 && numeric / total >= threshold;
+}
+
+// ---------- Column role classification ----------
+const STRICT_IDENTIFIER_KEYS = [
+  "email",
+  "e-mail",
+  "phone",
+  "mobile",
+  "contact",
+  "user_id",
+  "userid",
+  "uuid",
+  "id",
+];
+
+const SOFT_IDENTIFIER_KEYS = [
+  "name",
+  "full name",
+  "fullname",
+  "first name",
+  "firstname",
+  "last name",
+  "lastname",
+  "username",
+];
+
+function getColumnRole(columnName: string) {
+  const col = columnName.toLowerCase();
+
+  if (STRICT_IDENTIFIER_KEYS.some(k => col.includes(k))) {
+    return "strict";
+  }
+
+  if (SOFT_IDENTIFIER_KEYS.some(k => col.includes(k))) {
+    return "soft";
+  }
+
+  return "descriptive";
+}
+
+
 async function csvFromBuffer(buffer: Buffer): Promise<any[]> {
   const results: any[] = [];
   return new Promise((resolve, reject) => {
@@ -293,31 +349,99 @@ if (whitespaceIssues.length > 0) {
 }
 
 
+//Duplicate detection
+// Strict identifiers → duplicates are real problems
 
-// 🔹 7. Duplicate Detection (for any column)
-const valueCounts = new Map<string, number>();
+// function isNumericLikeColumn(values: any[], threshold = 0.6) {
+//   let numeric = 0;
+//   let total = 0;
 
-values.forEach((v) => {
-  if (v === null || v === undefined) return;
-  const key = String(v).trim();
-  if (!key) return; // ignore empty or whitespace-only
-  valueCounts.set(key, (valueCounts.get(key) || 0) + 1);
-});
+//   for (const v of values) {
+//     if (v === null || v === undefined || v === "") continue;
+//     total++;
+//     if (!isNaN(Number(v))) numeric++;
+//   }
 
-const duplicateEntries = Array.from(valueCounts.entries())
-  .filter(([_, count]) => count > 1)
-  .map(([val]) => val);
+//   return total > 0 && numeric / total >= threshold;
+// }
 
-if (duplicateEntries.length > 0) {
-  issues.push({
-    type: "duplicates",
-    column,
-    count: duplicateEntries.length,
-    description: `${duplicateEntries.length} duplicate values found in "${column}". (${duplicateEntries.join(", ")})`,
-    severity: "warning", // you can set "error" for ID columns if needed
-  });
+
+// const STRICT_IDENTIFIER_KEYS = [
+//   "email",
+//   "e-mail",
+//   "phone",
+//   "mobile",
+//   "contact",
+//   "user_id",
+//   "userid",
+//   "uuid",
+//   "id",
+// ];
+
+// // Soft identifiers → duplicates may be valid
+// const SOFT_IDENTIFIER_KEYS = [
+//   "name",
+//   "full name",
+//   "fullname",
+//   "first name",
+//   "firstname",
+//   "last name",
+//   "lastname",
+//   "username",
+// ];
+
+// Descriptive columns → duplicates are NORMAL
+// (experience, age, salary, city, etc.)
+
+function getColumnRole(columnName: string) {
+  const col = columnName.toLowerCase();
+
+  if (STRICT_IDENTIFIER_KEYS.some(k => col.includes(k))) {
+    return "strict";
+  }
+
+  if (SOFT_IDENTIFIER_KEYS.some(k => col.includes(k))) {
+    return "soft";
+  }
+
+  return "descriptive";
 }
 
+const role = getColumnRole(column);
+const isNumeric = isNumericLikeColumn(values);
+
+if (
+  role === "strict" ||
+  (role === "soft" && !isNumeric)
+) {
+  const valueCounts = new Map<string, number>();
+
+  values.forEach((v) => {
+    if (v === null || v === undefined) return;
+
+    const key = String(v).trim().toLowerCase();
+    if (!key) return;
+
+    valueCounts.set(key, (valueCounts.get(key) || 0) + 1);
+  });
+
+  const duplicateEntries = Array.from(valueCounts.entries())
+    .filter(([_, count]) => count > 1)
+    .map(([val]) => val);
+
+  if (duplicateEntries.length > 0) {
+    issues.push({
+      type: "duplicates",
+      column,
+      count: duplicateEntries.length,
+      description:
+        role === "strict"
+          ? `Duplicate unique identifiers found in "${column}".`
+          : `Repeated values found in "${column}". These may be valid.`,
+      severity: role === "strict" ? "error" : "info",
+    });
+  }
+}
 
   // 🔹 8. Invalid numeric conversions (context-aware)
 // const numericLikeThreshold = 0.6; // 60%+ values must be numeric to treat column as numeric-like
@@ -725,13 +849,21 @@ static applyCleaningOperation(data: any[], operation: CleaningOperation & { opti
     //      return map[s] ?? s; 
     //     };
         
-  const normalizeDuplicatesStrategy = (s: string | undefined) => {
-     if (!s) return "keep_first"; const map: Record<string, string> = { 
-      "Keep First": "keep_first", "Keep Last": "keep_last", "Remove All": 
-      "remove_all", keep_first: "keep_first", keep_last: "keep_last", remove_all: 
-      "remove_all", }; return map[s] ?? s; 
-    };
-    
+function normalizeDuplicatesStrategy(s?: string) {
+  if (!s) return "keep_first";
+
+  const map: Record<string, string> = {
+    "keep first": "keep_first",
+    "keep last": "keep_last",
+    "remove all": "remove_all",
+    keep_first: "keep_first",
+    keep_last: "keep_last",
+    remove_all: "remove_all",
+  };
+
+  return map[s.toLowerCase()] ?? "keep_first";
+}
+
     
 const normalizeCategory = (val: string): string => {
   if (!val) return "";
@@ -1534,57 +1666,79 @@ case "standardize_headers": {
     columns: originalCols.map((c) => headerMap[c]), // preserve original sequence
   };
 }
-/* ----- 🧹 Handle Duplicates (Column-Specific) ----- */
+
+/* ----- 🧹 Handle Duplicates (Column-Specific | SAFE) ----- */
 case "handle_duplicates": {
   if (!operation.column) return data;
+
   const col = operation.column;
   const rawStrategy = (operation as any).strategy as string | undefined;
   const strategy = normalizeDuplicatesStrategy(rawStrategy);
 
-  // Helper: normalize value for comparison (trim + stringify)
+  const role = getColumnRole(col);
+  const colValues = data.map(r => r[col]);
+
+  // 🚫 Never clean descriptive or numeric-like columns
+  if (role === "descriptive" || isNumericLikeColumn(colValues)) {
+    return data;
+  }
+
+  // 🚫 Soft identifiers require explicit intent
+  if (role === "soft" && !rawStrategy) {
+    return data;
+  }
+
   const normalize = (val: any) =>
     val === null || val === undefined
       ? ""
-      : String(val).trim().toLowerCase(); // case-insensitive match
+      : String(val).trim().toLowerCase();
 
+  // ---------- KEEP FIRST ----------
   if (strategy === "keep_first") {
     const seen = new Set<string>();
-    return data.filter((r) => {
+    return data.filter(r => {
       const key = normalize(r[col]);
-      if (!key) return true; // keep empty/null values
+      if (!key) return true;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
   }
 
+  // ---------- KEEP LAST (order-safe) ----------
   if (strategy === "keep_last") {
-    const map = new Map<string, any>();
-    for (const r of data) {
-      const key = normalize(r[col]);
-      if (key) map.set(key, r);
-    }
-    // Keep empty/null rows as they are
-    const emptyRows = data.filter((r) => !normalize(r[col]));
-    return [...Array.from(map.values()), ...emptyRows];
+    const seen = new Set<string>();
+    return [...data]
+      .reverse()
+      .filter(r => {
+        const key = normalize(r[col]);
+        if (!key) return true;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .reverse();
   }
 
+  // ---------- REMOVE ALL DUPLICATES ----------
   if (strategy === "remove_all") {
     const counts: Record<string, number> = {};
-    for (const r of data) {
-      const k = normalize(r[col]);
-      if (!k) continue; // ignore empty/null
-      counts[k] = (counts[k] || 0) + 1;
-    }
-    return data.filter((r) => {
+
+    data.forEach(r => {
       const key = normalize(r[col]);
-      return !key || counts[key] === 1; // keep uniques + blanks
+      if (!key) return;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+
+    return data.filter(r => {
+      const key = normalize(r[col]);
+      return !key || counts[key] === 1;
     });
   }
 
-  // Default fallback — same as keep_first
+  // ---------- FALLBACK ----------
   const seen = new Set<string>();
-  return data.filter((r) => {
+  return data.filter(r => {
     const key = normalize(r[col]);
     if (!key) return true;
     if (seen.has(key)) return false;

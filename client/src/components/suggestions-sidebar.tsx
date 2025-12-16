@@ -60,17 +60,22 @@ const ISSUE_UI_MAP: Record<
     strategy: method?.toLowerCase().replace(/\s+/g, "_") || "mode", // ✅ correct key here
   }),
 },
-  duplicates: {
-    title: "Duplicate IDs or Rows",
-    description: "Duplicate entries found in this column.",
-    actionLabel: "Handle Duplicates",
-    severity: "high",
-    operation: (column, method) => ({
-      type: "handle_duplicates", // ✅ corrected operation
-      column,
-      strategy: method?.toLowerCase().replace(/\s+/g, "_") || "keep_first",
-    }),
-  },
+
+ duplicates: {
+  title: "Repeated Values Detected",
+  description: "Duplicate entries found in this column.",
+  actionLabel: "Handle Duplicates",
+  severity: "high",
+
+  operation: (column, method) => ({
+    type: "handle_duplicates",
+    column,
+    strategy: method
+      ? method.toLowerCase().replace(/\s+/g, "_")
+      : undefined, // ✅ no silent default
+  }),
+},
+
 
   date_format: {
     title: "Inconsistent Date Formats",
