@@ -35,16 +35,34 @@ function isEmptyValue(val: any): boolean {
 
 //helpers for duplicate detection
 
+// ---------- Common placeholders ----------
+export const INVALID_PLACEHOLDERS = new Set([
+  "",
+  "na",
+  "n/a",
+  "null",
+  "undefined",
+  "-",
+  "--",
+  "unknown",
+  "invalid",
+  "invalid email",
+  "invalid phone",
+]);
 
 // ---------- Numeric-like detection ----------
-function isNumericLikeColumn(values: any[], threshold = 0.6) {
+export function isNumericLikeColumn(values: any[], threshold = 0.6) {
   let numeric = 0;
   let total = 0;
 
   for (const v of values) {
-    if (v === null || v === undefined || v === "") continue;
+    if (v === null || v === undefined) continue;
+
+    const s = String(v).trim();
+    if (!s || INVALID_PLACEHOLDERS.has(s.toLowerCase())) continue;
+
     total++;
-    if (!isNaN(Number(v))) numeric++;
+    if (!isNaN(Number(s))) numeric++;
   }
 
   return total > 0 && numeric / total >= threshold;
@@ -74,7 +92,7 @@ const SOFT_IDENTIFIER_KEYS = [
   "username",
 ];
 
-function getColumnRole(columnName: string) {
+export function getColumnRole(columnName: string) {
   const col = columnName.toLowerCase();
 
   if (STRICT_IDENTIFIER_KEYS.some(k => col.includes(k))) {
@@ -87,6 +105,7 @@ function getColumnRole(columnName: string) {
 
   return "descriptive";
 }
+
 
 
 async function csvFromBuffer(buffer: Buffer): Promise<any[]> {
@@ -331,22 +350,23 @@ const missingCount = values.filter((v) => isEmptyValue(v)).length;
       // }
 
  // 🔹 6. Invisible / Leading / Trailing Whitespace Issues
-const whitespaceIssues = values.filter(
-  (v) =>
-    typeof v === "string" &&
-    !isEmptyValue(v) && // skip null/empty
-    (v !== v.trim() || /[\u200B-\u200D\uFEFF]/.test(v)) // has leading/trailing or zero-width spaces
-);
 
-if (whitespaceIssues.length > 0) {
-  issues.push({
-    type: "invisible_whitespace",
-    column,
-    count: whitespaceIssues.length,
-    description: `${whitespaceIssues.length} cells in "${column}" contain leading, trailing, or invisible whitespace.`,
-    severity: "warning",
-  });
-}
+//   const whitespaceIssues = values.filter(
+//   (v) =>
+//     typeof v === "string" &&
+//     !isEmptyValue(v) && // skip null/empty
+//     (v !== v.trim() || /[\u200B-\u200D\uFEFF]/.test(v)) // has leading/trailing or zero-width spaces
+// );
+
+// if (whitespaceIssues.length > 0) {
+//   issues.push({
+//     type: "invisible_whitespace",
+//     column,
+//     count: whitespaceIssues.length,
+//     description: `${whitespaceIssues.length} cells in "${column}" contain leading, trailing, or invisible whitespace.`,
+//     severity: "warning",
+//   });
+// }
 
 
 //Duplicate detection
@@ -393,55 +413,61 @@ if (whitespaceIssues.length > 0) {
 // Descriptive columns → duplicates are NORMAL
 // (experience, age, salary, city, etc.)
 
-function getColumnRole(columnName: string) {
-  const col = columnName.toLowerCase();
+// function getColumnRole(columnName: string) {
+//   const col = columnName.toLowerCase();
 
-  if (STRICT_IDENTIFIER_KEYS.some(k => col.includes(k))) {
-    return "strict";
-  }
+//   if (STRICT_IDENTIFIER_KEYS.some(k => col.includes(k))) {
+//     return "strict";
+//   }
 
-  if (SOFT_IDENTIFIER_KEYS.some(k => col.includes(k))) {
-    return "soft";
-  }
+//   if (SOFT_IDENTIFIER_KEYS.some(k => col.includes(k))) {
+//     return "soft";
+//   }
 
-  return "descriptive";
-}
+//   return "descriptive";
+// }
 
+
+//duplicate detection logic
 const role = getColumnRole(column);
 const isNumeric = isNumericLikeColumn(values);
 
-if (
-  role === "strict" ||
-  (role === "soft" && !isNumeric)
-) {
+// Only meaningful columns
+if (role === "strict" || (role === "soft" && !isNumeric)) {
   const valueCounts = new Map<string, number>();
 
   values.forEach((v) => {
     if (v === null || v === undefined) return;
 
     const key = String(v).trim().toLowerCase();
-    if (!key) return;
+    if (!key || INVALID_PLACEHOLDERS.has(key)) return;
 
     valueCounts.set(key, (valueCounts.get(key) || 0) + 1);
   });
 
-  const duplicateEntries = Array.from(valueCounts.entries())
-    .filter(([_, count]) => count > 1)
-    .map(([val]) => val);
+  // Unique duplicated values
+  const duplicateValues = Array.from(valueCounts.entries())
+    .filter(([_, count]) => count > 1);
 
-  if (duplicateEntries.length > 0) {
+  if (duplicateValues.length > 0) {
+    // Total affected rows (better UX)
+    const affectedRows = duplicateValues
+      .map(([_, count]) => count)
+      .reduce((a, b) => a + b, 0);
+
     issues.push({
       type: "duplicates",
       column,
-      count: duplicateEntries.length,
+      count: affectedRows,
       description:
         role === "strict"
-          ? `Duplicate unique identifiers found in "${column}".`
-          : `Repeated values found in "${column}". These may be valid.`,
+          ? `Duplicate unique identifiers detected in "${column}".`
+          : `Repeated values detected in "${column}". Review if intentional.`,
       severity: role === "strict" ? "error" : "info",
     });
   }
 }
+
 
   // 🔹 8. Invalid numeric conversions (context-aware)
 // const numericLikeThreshold = 0.6; // 60%+ values must be numeric to treat column as numeric-like
@@ -473,23 +499,24 @@ if (
 
    
 // 🔹 9. Convert Numeric Strings (values that look numeric but are stored as strings)
-const convertibleStrings = values.filter(
-  (v) =>
-    typeof v === "string" &&
-    !isEmptyValue(v) &&
-    /^[0-9,.\s-]+$/.test(v.trim()) && // looks numeric (contains only digits, commas, etc.)
-    !isNaN(Number(v.replace(/,/g, "").trim())) // can be converted to number
-);
 
-if (convertibleStrings.length > 0) {
-  issues.push({
-    type: "convert_numeric_string",
-    column,
-    count: convertibleStrings.length,
-    description: `${convertibleStrings.length} numeric-like strings found in "${column}". Convert them to numeric type for consistency.`,
-    severity: "info",
-  });
-}
+// const convertibleStrings = values.filter(
+//   (v) =>
+//     typeof v === "string" &&
+//     !isEmptyValue(v) &&
+//     /^[0-9,.\s-]+$/.test(v.trim()) && // looks numeric (contains only digits, commas, etc.)
+//     !isNaN(Number(v.replace(/,/g, "").trim())) // can be converted to number
+// );
+
+// if (convertibleStrings.length > 0) {
+//   issues.push({
+//     type: "convert_numeric_string",
+//     column,
+//     count: convertibleStrings.length,
+//     description: `${convertibleStrings.length} numeric-like strings found in "${column}". Convert them to numeric type for consistency.`,
+//     severity: "info",
+//   });
+// }
 
 
 // // 🔹 12. Column type drift
@@ -516,7 +543,7 @@ if (convertibleStrings.length > 0) {
         });
       }
             
-const isLikelyCategorical = (values: any[]) => {
+  const isLikelyCategorical = (values: any[]) => {
   const cleanVals = values.filter(v => typeof v === "string" && v.trim() !== "");
   const uniqueVals = new Set(cleanVals.map(v => v.trim().toLowerCase()));
   return uniqueVals.size > 1 && uniqueVals.size <= 50;
@@ -549,86 +576,85 @@ if (isLikelyTextual(column, nonEmptyValues) && isLikelyCategorical(nonEmptyValue
 
 
 // 🟥 Typos & Mislabels (string similarity check)
-if (isLikelyCategorical(nonEmptyValues)) {
-  const strVals = nonEmptyValues
-    .filter((v): v is string => typeof v === "string")
-    .map(v => v.trim().toLowerCase());
+// if (isLikelyCategorical(nonEmptyValues)) {
+//   const strVals = nonEmptyValues
+//     .filter((v): v is string => typeof v === "string")
+//     .map(v => v.trim().toLowerCase());
 
-  const uniqueVals = [...new Set(strVals)];
-  let typoPairs: string[] = [];
+//   const uniqueVals = [...new Set(strVals)];
+//   let typoPairs: string[] = [];
 
-  const levenshtein = (a: string, b: string): number => {
-    const dp = Array.from({ length: a.length + 1 }, () =>
-      Array(b.length + 1).fill(0)
-    );
-    for (let i = 0; i <= a.length; i++) dp[i][0] = i;
-    for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+//   const levenshtein = (a: string, b: string): number => {
+//     const dp = Array.from({ length: a.length + 1 }, () =>
+//       Array(b.length + 1).fill(0)
+//     );
+//     for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+//     for (let j = 0; j <= b.length; j++) dp[0][j] = j;
 
-    for (let i = 1; i <= a.length; i++) {
-      for (let j = 1; j <= b.length; j++) {
-        dp[i][j] = Math.min(
-          dp[i - 1][j] + 1,
-          dp[i][j - 1] + 1,
-          dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
-        );
-      }
-    }
-    return dp[a.length][b.length];
-  };
+//     for (let i = 1; i <= a.length; i++) {
+//       for (let j = 1; j <= b.length; j++) {
+//         dp[i][j] = Math.min(
+//           dp[i - 1][j] + 1,
+//           dp[i][j - 1] + 1,
+//           dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+//         );
+//       }
+//     }
+//     return dp[a.length][b.length];
+//   };
 
-  for (let i = 0; i < uniqueVals.length; i++) {
-    for (let j = i + 1; j < uniqueVals.length; j++) {
-      const a = uniqueVals[i];
-      const b = uniqueVals[j];
-      const distance = levenshtein(a, b);
-      if (distance > 0 && distance <= 2) { // small typo range
-        typoPairs.push(`${a} ↔ ${b}`);
-      }
-    }
-  }
+//   for (let i = 0; i < uniqueVals.length; i++) {
+//     for (let j = i + 1; j < uniqueVals.length; j++) {
+//       const a = uniqueVals[i];
+//       const b = uniqueVals[j];
+//       const distance = levenshtein(a, b);
+//       if (distance > 0 && distance <= 2) { // small typo range
+//         typoPairs.push(`${a} ↔ ${b}`);
+//       }
+//     }
+//   }
 
-  if (typoPairs.length > 0) {
-    issues.push({
-      type: "typos_mislabels",
-      column,
-      count: typoPairs.length,
-      description: `Possible typos or mislabels in "${column}" — similar entries detected: ${typoPairs.slice(0, 5).join(", ")}`,
-      severity: "warning",
-    });
-  }
-}
+//   if (typoPairs.length > 0) {
+//     issues.push({
+//       type: "typos_mislabels",
+//       column,
+//       count: typoPairs.length,
+//       description: `Possible typos or mislabels in "${column}" — similar entries detected: ${typoPairs.slice(0, 5).join(", ")}`,
+//       severity: "warning",
+//     });
+//   }
+// }
 
 
 // 🟨 Mixed Data Types (improved)
-const typeSummary = values.reduce(
-  (acc, v) => {
-    if (isEmptyValue(v)) acc.empty++;
-    else if (!isNaN(Number(v)) && v !== "") acc.number++;
-    else if (typeof v === "boolean") acc.boolean++;
-    else if (!isNaN(Date.parse(v))) acc.date++;
-    else acc.string++;
-    return acc;
-  },
-  { number: 0, date: 0, string: 0, boolean: 0, empty: 0 }
-);
+// const typeSummary = values.reduce(
+//   (acc, v) => {
+//     if (isEmptyValue(v)) acc.empty++;
+//     else if (!isNaN(Number(v)) && v !== "") acc.number++;
+//     else if (typeof v === "boolean") acc.boolean++;
+//     else if (!isNaN(Date.parse(v))) acc.date++;
+//     else acc.string++;
+//     return acc;
+//   },
+//   { number: 0, date: 0, string: 0, boolean: 0, empty: 0 }
+// );
 
-const activeTypes = Object.entries(typeSummary).filter(
-  ([k, v]) => (v as number) > 0 && k !== "empty"
-);
+// const activeTypes = Object.entries(typeSummary).filter(
+//   ([k, v]) => (v as number) > 0 && k !== "empty"
+// );
 
-if (activeTypes.length > 1) {
-  issues.push({
-    type: "mixed_data_types",
-    column,
-    count: values.length,
-    description: `"${column}" contains mixed data types: ${activeTypes
-      .map(([t]) => t)
-      .join(", ")}.`,
-    severity: "error",
-  });
-}
+// if (activeTypes.length > 1) {
+//   issues.push({
+//     type: "mixed_data_types",
+//     column,
+//     count: values.length,
+//     description: `"${column}" contains mixed data types: ${activeTypes
+//       .map(([t]) => t)
+//       .join(", ")}.`,
+//     severity: "error",
+//   });
+// }
 
-  
 // 🧠 Corrupted Encoding Detection
 const encodingIssues = values.filter((v) => {
   if (typeof v !== "string") return false;
@@ -665,41 +691,41 @@ if (isLikelyTextual(column, nonEmptyValues) && !isLikelyCategorical(nonEmptyValu
   }
 }
 // 🟦 3. Normalize category — detect truly inconsistent categorical variants
-if (isLikelyCategorical(nonEmptyValues)) {
-  const stringVals = nonEmptyValues.filter((v): v is string => typeof v === "string");
+// if (isLikelyCategorical(nonEmptyValues)) {
+//   const stringVals = nonEmptyValues.filter((v): v is string => typeof v === "string");
 
-  // Normalize for comparison
-  const normalized = stringVals.map(v => v.trim().toLowerCase());
-  const uniqueNormalized = [...new Set(normalized)];
+//   // Normalize for comparison
+//   const normalized = stringVals.map(v => v.trim().toLowerCase());
+//   const uniqueNormalized = [...new Set(normalized)];
 
-  // Helper to find near-duplicates (like "male" vs "m" or "ny" vs "new york")
-  const hasMinorVariation = (a: string, b: string) => {
-    // Only mark if they are similar, not totally different
-    if (a === b) return false;
-    if (Math.abs(a.length - b.length) > 3) return false; // major difference
-    return a.includes(b) || b.includes(a);
-  };
+//   // Helper to find near-duplicates (like "male" vs "m" or "ny" vs "new york")
+//   const hasMinorVariation = (a: string, b: string) => {
+//     // Only mark if they are similar, not totally different
+//     if (a === b) return false;
+//     if (Math.abs(a.length - b.length) > 3) return false; // major difference
+//     return a.includes(b) || b.includes(a);
+//   };
 
-  let similarPairs = 0;
-  for (let i = 0; i < uniqueNormalized.length; i++) {
-    for (let j = i + 1; j < uniqueNormalized.length; j++) {
-      if (hasMinorVariation(uniqueNormalized[i], uniqueNormalized[j])) {
-        similarPairs++;
-      }
-    }
-  }
+//   let similarPairs = 0;
+//   for (let i = 0; i < uniqueNormalized.length; i++) {
+//     for (let j = i + 1; j < uniqueNormalized.length; j++) {
+//       if (hasMinorVariation(uniqueNormalized[i], uniqueNormalized[j])) {
+//         similarPairs++;
+//       }
+//     }
+//   }
 
-  // Only push issue if we actually found real near-duplicates
-  if (similarPairs > 0) {
-    issues.push({
-      type: "normalize_category",
-      column,
-      count: similarPairs,
-      description: `"${column}" contains categorical variants (e.g. "NY" vs "New York"). Consider standardizing.`,
-      severity: "info",
-    });
-  }
-}
+//   // Only push issue if we actually found real near-duplicates
+//   if (similarPairs > 0) {
+//     issues.push({
+//       type: "normalize_category",
+//       column,
+//       count: similarPairs,
+//       description: `"${column}" contains categorical variants (e.g. "NY" vs "New York"). Consider standardizing.`,
+//       severity: "info",
+//     });
+//   }
+// }
     }
 
     return issues;
@@ -1278,37 +1304,37 @@ case "standardize_phones": {
       }
 
     /* 🔢 Convert Numeric-Like Values */
-case "convert_numeric_strings": {
-  if (!operation.column) return data;
-  const col = operation.column;
+// case "convert_numeric_strings": {
+//   if (!operation.column) return data;
+//   const col = operation.column;
 
-  // Default to to_numeric if no choice is provided (for backward compatibility)
-  const choice = operation.choice || "to_numeric";
+//   // Default to to_numeric if no choice is provided (for backward compatibility)
+//   const choice = operation.choice || "to_numeric";
 
-  return data.map((row) => {
-    const val = row[col];
-    if (val == null || val === "") return row;
+//   return data.map((row) => {
+//     const val = row[col];
+//     if (val == null || val === "") return row;
 
-    // 🟦 Option 1: Convert to number (for technical / standard cleaning)
-    if (choice === "to_numeric") {
-      if (typeof val === "string" && /^[\d,.\s-]+$/.test(val.trim())) {
-        const cleaned = val.replace(/,/g, "").trim();
-        const parsed = Number(cleaned);
-        if (!isNaN(parsed)) row[col] = parsed;
-      }
-    }
+//     // 🟦 Option 1: Convert to number (for technical / standard cleaning)
+//     if (choice === "to_numeric") {
+//       if (typeof val === "string" && /^[\d,.\s-]+$/.test(val.trim())) {
+//         const cleaned = val.replace(/,/g, "").trim();
+//         const parsed = Number(cleaned);
+//         if (!isNaN(parsed)) row[col] = parsed;
+//       }
+//     }
 
-    // 🟨 Option 2: Convert to string (for non-technical / safe format)
-    else if (choice === "to_string") {
-      if (typeof val === "number") {
-        // Convert numeric values into a properly formatted string
-        row[col] = val.toString();
-      }
-    }
+//     // 🟨 Option 2: Convert to string (for non-technical / safe format)
+//     else if (choice === "to_string") {
+//       if (typeof val === "number") {
+//         // Convert numeric values into a properly formatted string
+//         row[col] = val.toString();
+//       }
+//     }
 
-    return row;
-  });
-}
+//     return row;
+//   });
+// }
 
 
       // /* ⚙️ Fix Type Mismatches */
@@ -1374,17 +1400,17 @@ case "normalize_case": {
   });
 }
   /* Normalize Category Names */
-case "normalize_categories": {
-  if (!operation.column) return data;
-  const col = operation.column;
-  return data.map((r) => {
-    const val = r[col];
-    if (val != null && val !== "") {
-      r[col] = normalizeCategory(String(val));
-    }
-    return r;
-  });
-}
+// case "normalize_categories": {
+//   if (!operation.column) return data;
+//   const col = operation.column;
+//   return data.map((r) => {
+//     const val = r[col];
+//     if (val != null && val !== "") {
+//       r[col] = normalizeCategory(String(val));
+//     }
+//     return r;
+//   });
+// }
 
   /* 🔠 Fix Capitalization Inconsistency */
 case "fix_capitalization_inconsistency": {
@@ -1403,151 +1429,151 @@ case "fix_capitalization_inconsistency": {
 }
 
 /* ✅ Fix Typos & Mislabels (verified “Indai” → “India”) */
-case "fix_typos_and_mislabels": {
-  if (!operation.column) return data;
-  const column = operation.column;
+// case "fix_typos_and_mislabels": {
+//   if (!operation.column) return data;
+//   const column = operation.column;
 
-  // canonical reference lists
-  const COUNTRIES = [
-    "India",
-    "United States",
-    "United Kingdom",
-    "Canada",
-    "Australia",
-    "Germany",
-    "France",
-    "Spain",
-    "Italy",
-  ];
-  const GENDERS = ["Male", "Female", "Other", "Unknown"];
+//   // canonical reference lists
+//   const COUNTRIES = [
+//     "India",
+//     "United States",
+//     "United Kingdom",
+//     "Canada",
+//     "Australia",
+//     "Germany",
+//     "France",
+//     "Spain",
+//     "Italy",
+//   ];
+//   const GENDERS = ["Male", "Female", "Other", "Unknown"];
 
-  // normalize + strip accents/punctuation
-  const normalizeStr = (s: string) =>
-    typeof s === "string"
-      ? s.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
-      : s;
+//   // normalize + strip accents/punctuation
+//   const normalizeStr = (s: string) =>
+//     typeof s === "string"
+//       ? s.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+//       : s;
 
-  const keyify = (s: string) =>
-    (normalizeStr(s) || "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "")
-      .trim();
+//   const keyify = (s: string) =>
+//     (normalizeStr(s) || "")
+//       .toLowerCase()
+//       .replace(/[^a-z0-9]/g, "")
+//       .trim();
 
-  // Levenshtein distance
-  const levenshtein = (a: string, b: string) => {
-    const m = a.length, n = b.length;
-    const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-    for (let i = 0; i <= m; i++) dp[i][0] = i;
-    for (let j = 0; j <= n; j++) dp[0][j] = j;
-    for (let i = 1; i <= m; i++) {
-      for (let j = 1; j <= n; j++) {
-        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-        dp[i][j] = Math.min(
-          dp[i - 1][j] + 1,
-          dp[i][j - 1] + 1,
-          dp[i - 1][j - 1] + cost
-        );
-      }
-    }
-    return dp[m][n];
-  };
+//   // Levenshtein distance
+//   const levenshtein = (a: string, b: string) => {
+//     const m = a.length, n = b.length;
+//     const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+//     for (let i = 0; i <= m; i++) dp[i][0] = i;
+//     for (let j = 0; j <= n; j++) dp[0][j] = j;
+//     for (let i = 1; i <= m; i++) {
+//       for (let j = 1; j <= n; j++) {
+//         const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+//         dp[i][j] = Math.min(
+//           dp[i - 1][j] + 1,
+//           dp[i][j - 1] + 1,
+//           dp[i - 1][j - 1] + cost
+//         );
+//       }
+//     }
+//     return dp[m][n];
+//   };
 
-  // fuzzy matcher (relaxed threshold)
-  const bestMatch = (val: string, list: string[]) => {
-    const k = keyify(val);
-    if (!k) return null;
-    let best = { cand: "", dist: Infinity };
-    for (const c of list) {
-      const ck = keyify(c);
-      const d = levenshtein(k, ck);
-      if (d < best.dist) best = { cand: c, dist: d };
-    }
-    const maxLen = Math.max(k.length, keyify(best.cand).length, 1);
-    const threshold = Math.ceil(maxLen * 0.5); // allow ~50% difference
-    return best.dist <= threshold ? best.cand : null;
-  };
+//   // fuzzy matcher (relaxed threshold)
+//   const bestMatch = (val: string, list: string[]) => {
+//     const k = keyify(val);
+//     if (!k) return null;
+//     let best = { cand: "", dist: Infinity };
+//     for (const c of list) {
+//       const ck = keyify(c);
+//       const d = levenshtein(k, ck);
+//       if (d < best.dist) best = { cand: c, dist: d };
+//     }
+//     const maxLen = Math.max(k.length, keyify(best.cand).length, 1);
+//     const threshold = Math.ceil(maxLen * 0.5); // allow ~50% difference
+//     return best.dist <= threshold ? best.cand : null;
+//   };
 
-  const result = data.map((row) => {
-    const raw = row[column];
-    if (typeof raw !== "string") return { ...row };
+//   const result = data.map((row) => {
+//     const raw = row[column];
+//     if (typeof raw !== "string") return { ...row };
 
-    const trimmed = raw.trim();
-    const key = keyify(trimmed);
+//     const trimmed = raw.trim();
+//     const key = keyify(trimmed);
 
-    // Gender corrections
-    if (/gender/i.test(column)) {
-      if (["m", "male"].includes(key)) return { ...row, [column]: "Male" };
-      if (["f", "female"].includes(key)) return { ...row, [column]: "Female" };
-      const gm = bestMatch(trimmed, GENDERS);
-      if (gm) return { ...row, [column]: gm };
-    }
+//     // Gender corrections
+//     if (/gender/i.test(column)) {
+//       if (["m", "male"].includes(key)) return { ...row, [column]: "Male" };
+//       if (["f", "female"].includes(key)) return { ...row, [column]: "Female" };
+//       const gm = bestMatch(trimmed, GENDERS);
+//       if (gm) return { ...row, [column]: gm };
+//     }
 
-    // Country corrections
-    if (/country|nation|location/i.test(column)) {
-      if (["us", "usa", "unitedstates"].includes(key))
-        return { ...row, [column]: "United States" };
-      if (["india", "bharat", "ind"].includes(key))
-        return { ...row, [column]: "India" };
-      const cm = bestMatch(trimmed, COUNTRIES);
-      if (cm) return { ...row, [column]: cm };
-    }
+//     // Country corrections
+//     if (/country|nation|location/i.test(column)) {
+//       if (["us", "usa", "unitedstates"].includes(key))
+//         return { ...row, [column]: "United States" };
+//       if (["india", "bharat", "ind"].includes(key))
+//         return { ...row, [column]: "India" };
+//       const cm = bestMatch(trimmed, COUNTRIES);
+//       if (cm) return { ...row, [column]: cm };
+//     }
 
-    // Final generic fuzzy attempt
-    const generic = bestMatch(trimmed, [...COUNTRIES, ...GENDERS]);
-    if (generic) return { ...row, [column]: generic };
+//     // Final generic fuzzy attempt
+//     const generic = bestMatch(trimmed, [...COUNTRIES, ...GENDERS]);
+//     if (generic) return { ...row, [column]: generic };
 
-    // Default: Title Case
-    return {
-      ...row,
-      [column]: trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase(),
-    };
-  });
+//     // Default: Title Case
+//     return {
+//       ...row,
+//       [column]: trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase(),
+//     };
+//   });
 
-  return result;
-}
+//   return result;
+// }
 
 
 /* 🔄 Fix Mixed Data Types */
-case "fix_mixed_data_types": {
-  if (!operation.column) return data;
-  const column = operation.column;
+// case "fix_mixed_data_types": {
+//   if (!operation.column) return data;
+//   const column = operation.column;
 
-  const cleanedData = data.map((row) => {
-    let value = row[column];
+//   const cleanedData = data.map((row) => {
+//     let value = row[column];
 
-    if (typeof value === "string") {
-      let v = value.trim().toLowerCase();
+//     if (typeof value === "string") {
+//       let v = value.trim().toLowerCase();
 
-      // 🔹 Remove commas and extra symbols (common in salary or numbers)
-      v = v.replace(/,/g, "").replace(/[^0-9.\-a-z]/g, "");
+//       // 🔹 Remove commas and extra symbols (common in salary or numbers)
+//       v = v.replace(/,/g, "").replace(/[^0-9.\-a-z]/g, "");
 
-      // 🔹 Convert boolean-like
-      if (["true", "yes", "y"].includes(v)) value = true;
-      else if (["false", "no", "n"].includes(v)) value = false;
+//       // 🔹 Convert boolean-like
+//       if (["true", "yes", "y"].includes(v)) value = true;
+//       else if (["false", "no", "n"].includes(v)) value = false;
 
-      // 🔹 Convert null-like
-      else if (["null", "none", "na", "n/a", "undefined", ""].includes(v)) value = null;
+//       // 🔹 Convert null-like
+//       else if (["null", "none", "na", "n/a", "undefined", ""].includes(v)) value = null;
 
-      // 🔹 Convert numeric-like (handles “200000”, “-42”, “0.55”)
-      else if (!isNaN(Number(v)) && v !== "") value = Number(v);
+//       // 🔹 Convert numeric-like (handles “200000”, “-42”, “0.55”)
+//       else if (!isNaN(Number(v)) && v !== "") value = Number(v);
 
-      // 🔹 Convert word-based numbers (optional small mapping)
-      else {
-        const wordToNum: Record<string, number> = {
-          zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5,
-          six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
-          twenty: 20, thirty: 30, forty: 40, fifty: 50,
-        };
-        if (wordToNum[v] !== undefined) value = wordToNum[v];
-        else if (v === "nan") value = null; // literal “NaN”
-      }
-    }
+//       // 🔹 Convert word-based numbers (optional small mapping)
+//       else {
+//         const wordToNum: Record<string, number> = {
+//           zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5,
+//           six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+//           twenty: 20, thirty: 30, forty: 40, fifty: 50,
+//         };
+//         if (wordToNum[v] !== undefined) value = wordToNum[v];
+//         else if (v === "nan") value = null; // literal “NaN”
+//       }
+//     }
 
-    return { ...row, [column]: value };
-  });
+//     return { ...row, [column]: value };
+//   });
 
-  return [...cleanedData]; // important: new array reference for re-render
-}
+//   return [...cleanedData]; // important: new array reference for re-render
+// }
 
 /* 🧠 Fix Corrupted Encoding */
 case "fix_corrupted_encoding": {
@@ -1582,27 +1608,27 @@ case "fix_corrupted_encoding": {
 }
 
  /* 🫧 Remove Invisible / Leading / Trailing Whitespace */
-case "remove_invisible_whitespace": {
-  if (!operation.column) return data;
-  const col = operation.column;
+// case "remove_invisible_whitespace": {
+//   if (!operation.column) return data;
+//   const col = operation.column;
 
-  return data.map((r) => {
-    const newRow = { ...r };
-    const val = newRow[col];
+//   return data.map((r) => {
+//     const newRow = { ...r };
+//     const val = newRow[col];
 
-    if (typeof val === "string") {
-      // Comprehensive cleanup:
-      // - Removes all invisible and non-printable spaces
-      // - Handles zero-width, non-breaking, and wide spaces
-      // - Trims normal leading/trailing spaces
-      newRow[col] = val
-        .replace(/[\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u180E\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\u200B-\u200D\uFEFF]/g, "")
-        .trim();
-    }
+//     if (typeof val === "string") {
+//       // Comprehensive cleanup:
+//       // - Removes all invisible and non-printable spaces
+//       // - Handles zero-width, non-breaking, and wide spaces
+//       // - Trims normal leading/trailing spaces
+//       newRow[col] = val
+//         .replace(/[\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u180E\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\u200B-\u200D\uFEFF]/g, "")
+//         .trim();
+//     }
 
-    return newRow;
-  });
-}
+//     return newRow;
+//   });
+// }
 
 
       // /* 🔄 Handle Type Drift (convert numeric-like / date-like strings, drop invalids) */
@@ -1886,7 +1912,7 @@ app.post("/api/upload/clean", async (req, res) => {
   rowObj[header] = val ?? null;
 });
 
-          data.push(rowObj);
+   data.push(rowObj);
         });
       } else {
         return res.status(400).json({ message: "Unsupported file type" });

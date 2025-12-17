@@ -94,7 +94,7 @@ const ISSUE_UI_MAP: Record<
   email_format: {
     title: "Invalid Email Addresses",
     description: "Some email entries are malformed.",
-    actionLabel: "Clean Emails",
+    actionLabel: "Standardize Emails",
     severity: "high",
     operation: (column) => ({ type: "standardize_emails", column }),
   },
@@ -121,39 +121,39 @@ outliers: {
   }),
 },
 
-invisible_whitespace: {
-    title: "Invisible Whitespaces",
-    description: "Cells with hidden or non-printable spaces detected.",
-    actionLabel: "Remove Invisible Spaces",
-    severity: "low",
-    operation: (column) => ({
-      type: "remove_invisible_whitespace", // ✅ backend-aligned
-      column,
-    }),
-  },
+// invisible_whitespace: {
+//     title: "Invisible Whitespaces",
+//     description: "Cells with hidden or non-printable spaces detected.",
+//     actionLabel: "Remove Invisible Spaces",
+//     severity: "low",
+//     operation: (column) => ({
+//       type: "remove_invisible_whitespace", // ✅ backend-aligned
+//       column,
+//     }),
+//   },
 
-  typos_mislabels: {
-  title: "Typos & Mislabels",
-  description: "Detected spelling mistakes or inconsistent category labels.",
-  actionLabel: "Fix Typos",
-  severity: "medium",
-  operation: (column) => ({
-    type: "fix_typos_mislabels",
-    column,
-  }),
-},
+//   typos_mislabels: {
+//   title: "Typos & Mislabels",
+//   description: "Detected spelling mistakes or inconsistent category labels.",
+//   actionLabel: "Fix Typos",
+//   severity: "medium",
+//   operation: (column) => ({
+//     type: "fix_typos_mislabels",
+//     column,
+//   }),
+// },
 
 
-mixed_data_types: {
-  title: "Mixed Data Types",
-  description: "Column contains both numeric and text values.",
-  actionLabel: "Convert Data Types",
-  severity: "medium",
-  operation: (column) => ({
-    type: "fix_mixed_data_types",
-    column,
-  }),
-},
+// mixed_data_types: {
+//   title: "Mixed Data Types",
+//   description: "Column contains both numeric and text values.",
+//   actionLabel: "Convert Data Types",
+//   severity: "medium",
+//   operation: (column) => ({
+//     type: "fix_mixed_data_types",
+//     column,
+//   }),
+// },
 
 
 corrupted_encoding: {
@@ -167,17 +167,17 @@ corrupted_encoding: {
   }),
 },
 
-convert_numeric_string: {
-  title: "Numeric/String Conversion Needed",
-  description: "Data type mismatch between numeric and string values.",
-  actionLabel: "Convert Values",
-  severity: "medium",
-  operation: (column, choice) => ({
-    type: "convert_numeric_string",
-    column,
-    choice: choice?.toLowerCase().replace(/\s+/g, "_") || "to_numeric",
-  }),
-},
+// convert_numeric_string: {
+//   title: "Numeric/String Conversion Needed",
+//   description: "Data type mismatch between numeric and string values.",
+//   actionLabel: "Convert Values",
+//   severity: "medium",
+//   operation: (column, choice) => ({
+//     type: "convert_numeric_string",
+//     column,
+//     choice: choice?.toLowerCase().replace(/\s+/g, "_") || "to_numeric",
+//   }),
+// },
 
 
   normalize_case: {
@@ -187,13 +187,13 @@ convert_numeric_string: {
     severity: "low",
     operation: (column) => ({ type: "normalize_case", column }),
   },
-  normalize_category: {
-    title: "Inconsistent Categories",
-    description: "Similar categories differ slightly (e.g., 'HR', 'Hr').",
-    actionLabel: "normalize_categories",
-    severity: "medium",
-    operation: (column) => ({ type: "normalize_categories", column }),
-  },
+  // normalize_category: {
+  //   title: "Inconsistent Categories",
+  //   description: "Similar categories differ slightly (e.g., 'HR', 'Hr').",
+  //   actionLabel: "normalize_categories",
+  //   severity: "medium",
+  //   operation: (column) => ({ type: "normalize_categories", column }),
+  // },
   capitalization_inconsistency: {
     title: "Capitalization Mismatch",
     description: "Some category values are inconsistent or misspelled.",
