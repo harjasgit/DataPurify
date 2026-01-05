@@ -6,7 +6,7 @@
 // ✔ Trusted: beta codes are sent manually via Gmail
 
 import express from "express";
-import { betaCodesStorage } from "./betaCodesStorage";
+import { betaCodesStorage } from "./betaCodesStorage.js";
 
 const router = express.Router();
 
