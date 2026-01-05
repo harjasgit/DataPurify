@@ -5,7 +5,7 @@ async function throwIfResNotOk(res: Response) {
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
-}
+} 
 
 export async function apiRequest(
   method: string,

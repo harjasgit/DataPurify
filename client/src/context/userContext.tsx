@@ -197,8 +197,6 @@ useEffect(() => {
 
   const betaAccess = user?.user_metadata?.beta_access === true;
 
-
-
   return (
     <UserContext.Provider
       value={{

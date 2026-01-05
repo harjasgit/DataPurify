@@ -1,89 +1,42 @@
 import { X } from "lucide-react";
 import { useState } from "react";
-import { useUser } from "@/context/userContext";
-import { useToast } from "@/hooks/use-toast";
 
-export default function BetaPromoBanner() {
+export default function EarlyAccessBanner() {
   const [visible, setVisible] = useState(true);
-  const { user } = useUser();
-  const { toast } = useToast();
 
   if (!visible) return null;
 
-  if (!user) {
-    return (
-      <div className="w-full bg-[#1a1a2e]/95 border-b border-[#8668FD]/30 text-white">
-        <div className="max-w-7xl mx-auto px-6 py-3 text-center text-sm text-gray-300">
-          Sign up to request beta access.
-        </div>
-      </div>
-    );
-  }
-
-  const handleClick = () => {
-    const gmailUrl =
-      "https://mail.google.com/mail/?view=cm&fs=1" +
-      "&to=datapurify@gmail.com" +
-      "&su=" +
-      encodeURIComponent("Request for DataPurify Beta Access") +
-      "&body=" +
-      encodeURIComponent(
-        `Hi DataPurify Team,
-
-I would like to request beta access.
-
-Name: ${user.name || ""}
-Email: ${user.email}
-
-Thank you!`
-      );
-
-    // ✅ Opens Gmail compose directly
-    window.open(gmailUrl, "_blank");
-
-    toast({
-      title: "Almost there 🚀",
-      description:
-        "Gmail has opened. Please send the email to receive your beta code.",
-    });
-
-    // fire & forget backend logging
-    fetch(`${import.meta.env.VITE_API_URL}/api/request-beta-code`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user.id,
-        email: user.email,
-      }),
-    }).catch(console.error);
+  const handleJoinWaitlist = () => {
+    // You can replace this later with:
+    // - modal open
+    // - waitlist page route
+    // - email capture flow
+    window.location.href = "/waitlist";
   };
 
   return (
     <div className="w-full bg-[#1a1a2e]/95 border-b border-[#8668FD]/30 text-white">
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-center gap-6">
-        <p className="text-sm flex items-center gap-2 text-center">
-          <span>🎉</span>
-          <span className="font-semibold text-[#B49CFF]">
-            Limited Beta Access:
+        <p className="text-sm flex items-center gap-2 text-center text-gray-300">
+          <span>🚀</span>
+          <span className="font-medium">
+            Early Access coming soon —
           </span>
-          <span className="text-gray-300">
-            Try DataPurify{" "}
-            <span className="text-[#B49CFF] font-medium">
-              FREE during Beta
-            </span>
+          <span>
+            Join the waitlist to be among the first to try{" "}
+            <span className="text-[#B49CFF] font-semibold">DataPurify</span>
           </span>
-          <span className="text-gray-300"> in exchange for your honest feedback</span>
         </p>
 
         {/* CTA */}
         <button
-          onClick={handleClick}
+          onClick={handleJoinWaitlist}
           className="text-sm font-medium text-[#B49CFF] underline underline-offset-2 hover:text-[#d3c5ff]"
         >
-          Request Beta Access
+          Join Waitlist
         </button>
 
-        {/* CLOSE */}
+        {/* Close */}
         <button
           className="text-gray-400 hover:text-white"
           onClick={() => setVisible(false)}

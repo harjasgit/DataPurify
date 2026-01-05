@@ -269,7 +269,7 @@ const handleFullScreen = () => {
             validate, and format it — automatically.
           </p>
 
-          <UploadTriggerButton
+          {/* <UploadTriggerButton
             open={showUploadModal}
             onOpenChange={setShowUploadModal}
             onCleanUpload={(file) => {
@@ -288,35 +288,42 @@ const handleFullScreen = () => {
               setShowUploadModal(false);
               handleRecordLinkageUpload(fileA, fileB);
             }}
-          />
+          /> */}
+
+          <button
+  className="mt-4 px-6 py-3 rounded-xl bg-primary text-white font-medium 
+             hover:opacity-90 transition"
+>
+  Join the Waitlist
+</button>
         </div>
 
-        {/* RIGHT SIDE - VIDEO */}
-<div className="flex justify-center w-full md:w-[55%]">
+       <div className="flex justify-center w-full md:w-[55%]">
   <div
-    className="relative rounded-2xl overflow-hidden shadow-xl border border-border/40 bg-card w-full max-w-xl cursor-pointer"
-    onClick={handleFullScreen}
+    className="relative rounded-2xl overflow-hidden shadow-xl 
+               border border-border/40 bg-card 
+               w-full max-w-xl cursor-pointer"
+    onClick={handleFullScreen} // optional: open modal/lightbox
   >
-    <video
-      ref={videoRef}
-      src="/updatedSaas.mp4"
-      className="w-full h-full object-cover"
-      autoPlay
-      muted
-      loop
-      playsInline
+    <img
+      src="/PreviewImage.jpeg"   // 👉 your preview image
+      alt="DataPurify dashboard preview"
+      className="w-full h-auto object-cover"
+      loading="lazy"
     />
 
-    {/* Hover overlay */}
-    <div className="absolute inset-0 flex items-center justify-center 
-                    opacity-0 hover:opacity-100 transition duration-200 
-                    bg-black/20 pointer-events-none">
-      <span className="text-white text-sm bg-black/50 px-3 py-1 rounded-md">
-        Click to view full screen
+    {/* Hover overlay (desktop only) */}
+    <div
+      className="absolute inset-0 hidden md:flex items-center justify-center 
+                 opacity-0 hover:opacity-100 transition duration-200 
+                 bg-black/20">
+      <span className="text-white text-sm bg-black/60 px-3 py-1 rounded-md">
+        Click to view full preview
       </span>
     </div>
   </div>
 </div>
+
       </section>
 
       {/* ---------------- FEATURES SECTION ---------------- */}

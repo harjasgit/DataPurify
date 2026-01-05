@@ -54,10 +54,10 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
             {/* Desktop Nav */}
             { <div className="hidden md:flex space-x-8">
               <a href="/#pricing-section">
-                <Button variant="ghost">Pricing</Button>
+                <Button variant="ghost">Features</Button>
               </a>
               <a href="/#features-section">
-              <Button variant="ghost">Features</Button>
+              <Button variant="ghost">Testimonials</Button>
               </a>
               <a href="/#contact-section">
               <Button variant="ghost">Contact Us</Button>
@@ -75,7 +75,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
 
               {/* AUTH */}
              {user ? (
-  <div className="flex items-center space-x-4">
+         <div className="flex items-center space-x-4">
     
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -106,14 +106,22 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
     </DropdownMenu>
   </div>
 ) : (
-  <div className="flex items-center space-x-3">
-    <Button className="bg-[#8668FD] text-white" onClick={() => setShowAuthModal(true)}>
-      Login
-    </Button>
-    <Button variant="outline" className="border-[#8668FD] text-[#8668FD]" onClick={() => setShowAuthModal(true)}>
-      Sign Up
-    </Button>
-  </div>
+  // <div className="flex items-center space-x-3">
+  //   <Button className="bg-[#8668FD] text-white" onClick={() => setShowAuthModal(true)}>
+  //     Login
+  //   </Button>
+  //   <Button variant="outline" className="border-[#8668FD] text-[#8668FD]" onClick={() => setShowAuthModal(true)}>
+  //     Sign Up
+  //   </Button>
+  // </div>
+
+  <Button
+    className="bg-[#8668FD] text-white px-5 rounded-full hover:bg-[#9b82ff] transition"
+    onClick={() => (window.location.href = "/waitlist")}
+  >
+    Join Waitlist
+  </Button>
+
 )}
 
  </div>

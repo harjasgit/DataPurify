@@ -155,9 +155,9 @@ class DataProcessor {
     const results: any[] = [];
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(filePath);
-    workbook.eachSheet((worksheet) => {
+    workbook.eachSheet((worksheet: any) => {
       let headers: string[] = [];
-      worksheet.eachRow((row, rowNumber) => {
+      worksheet.eachRow((row: any, rowNumber: number) => {
         const values = row.values as any[];
         values.shift();
         if (rowNumber === 1) {
@@ -1848,7 +1848,7 @@ app.post("/api/upload/clean", async (req, res) => {
     let filename = "";
     let mimetype = "";
 
-    bb.on("file", (_name: string, file: NodeJS.ReadableStream, info: Busboy.FileInfo) => {
+    bb.on("file", (_name: string, file: NodeJS.ReadableStream, info: any) => {
       filename = info.filename;
       mimetype = info.mimeType;
       const chunks: Buffer[] = [];
@@ -1888,10 +1888,10 @@ app.post("/api/upload/clean", async (req, res) => {
         const headerRow = worksheet.getRow(1);
         const headers = (headerRow.values as (string | undefined)[]).slice(1) as string[];
 
-        worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+        worksheet.eachRow({ includeEmpty: false }, (row: any, rowNumber: number) => {
           if (rowNumber === 1) return;
           const rowObj: Record<string, any> = {};
-    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    row.eachCell({ includeEmpty: true }, (cell: any, colNumber: number) => {
   const header = headers[colNumber - 1];
   if (!header) return;
 
