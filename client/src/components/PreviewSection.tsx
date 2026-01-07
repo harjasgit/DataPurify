@@ -2,7 +2,7 @@ import TestimonialsSection from "./TestimonialSection";
 
 const PreviewSection = () => {
   return (
-    <section className="w-full max-w-7xl mx-auto px-6 pt-10 text-center">
+    <section className="w-full max-w-7xl mx-auto px-6 pt-10 text-center" id="preview-section">
       
       {/* Heading */}
       <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
