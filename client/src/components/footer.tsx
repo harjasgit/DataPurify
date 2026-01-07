@@ -1,8 +1,9 @@
-import { Mail, Database, Lock } from "lucide-react";
+import { Mail, Database } from "lucide-react";
+import { FaTwitter } from "react-icons/fa";
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-[#0a0a0a] text-gray-300 pt-14 pb-6 mt-20">
+    <footer className="w-full bg-background text-foreground pt-14 pb-6 mt-20 border-t border-border" id="footer">
       
       {/* MAIN GRID */}
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 items-center gap-6">
@@ -13,35 +14,47 @@ export default function Footer() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mr-3">
               <Database className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-semibold text-foreground">
+            <span className="text-lg font-semibold">
               DataPurify
             </span>
           </div>
 
-          <p className="text-xs text-gray-400 leading-relaxed max-w-sm">
-            <span className="flex items-center justify-center md:justify-start gap-1 mb-1 text-gray-300">
-              <Lock size={13} /> Privacy-first, rule-based data cleaning
+          <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
+            <span className="flex items-center justify-center md:justify-start gap-1 mb-1">
+              Rule-based data cleaning, No AI.
             </span>
-            No AI. No third-party sharing. Files auto-delete within{" "}
-            <span className="text-white font-medium">24 hours</span>.
+             No third-party sharing. Files auto-delete within{" "}
+            <span className="font-medium text-foreground">24 hours</span>.
           </p>
         </div>
 
         {/* CENTER — POLICIES */}
         <div className="flex justify-center gap-8 text-sm">
-          <a href="/privacy" className="hover:text-white transition">
+          <a href="/privacy" className="hover:text-primary transition">
             Privacy
           </a>
-          <a href="/terms" className="hover:text-white transition">
+          <a href="/terms" className="hover:text-primary transition">
             Terms
           </a>
         </div>
 
-        {/* RIGHT — CONTACT */}
-        <div className="flex justify-center md:justify-end">
+        {/* RIGHT — SOCIAL */}
+        <div className="flex justify-center md:justify-end gap-3">
+          
+          {/* Twitter */}
+          <a
+            href="https://twitter.com"
+            target="_blank"
+            className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition"
+            aria-label="Twitter"
+          >
+            <FaTwitter size={15} />
+          </a>
+
+          {/* Mail */}
           <a
             href="mailto:datapurify@gmail.com"
-            className="w-9 h-9 rounded-full border border-gray-700 flex items-center justify-center hover:border-white transition"
+            className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition"
             aria-label="Contact"
           >
             <Mail size={16} />
@@ -51,7 +64,7 @@ export default function Footer() {
       </div>
 
       {/* BOTTOM TEXT */}
-      <div className="border-t border-gray-800 mt-10 pt-4 text-center text-xs text-gray-500">
+      <div className="border-t border-border mt-10 pt-4 text-center text-xs text-muted-foreground">
         © {new Date().getFullYear()} DataPurify. All rights reserved.
       </div>
     </footer>

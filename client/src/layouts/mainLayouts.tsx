@@ -53,13 +53,14 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
 
             {/* Desktop Nav */}
             { <div className="hidden md:flex space-x-8">
-              <a href="/#pricing-section">
+              {/* <a href="/#pricing-section"> */}
+              <a href="/#features-section">
                 <Button variant="ghost">Features</Button>
               </a>
-              <a href="/#features-section">
+              <a href="/#testimonials-section">
               <Button variant="ghost">Testimonials</Button>
               </a>
-              <a href="/#contact-section">
+              <a href="/#footer">
               <Button variant="ghost">Contact Us</Button>
             </a>
             </div> }
@@ -106,21 +107,21 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
     </DropdownMenu>
   </div>
 ) : (
-  // <div className="flex items-center space-x-3">
-  //   <Button className="bg-[#8668FD] text-white" onClick={() => setShowAuthModal(true)}>
-  //     Login
-  //   </Button>
-  //   <Button variant="outline" className="border-[#8668FD] text-[#8668FD]" onClick={() => setShowAuthModal(true)}>
-  //     Sign Up
-  //   </Button>
-  // </div>
+  <div className="flex items-center space-x-3">
+    <Button className="bg-[#8668FD] text-white" onClick={() => setShowAuthModal(true)}>
+      Login
+    </Button>
+    <Button variant="outline" className="border-[#8668FD] text-[#8668FD]" onClick={() => setShowAuthModal(true)}>
+      Sign Up
+    </Button>
+  </div>
 
-  <Button
-    className="bg-[#8668FD] text-white px-5 rounded-full hover:bg-[#9b82ff] transition"
-    onClick={() => (window.location.href = "/waitlist")}
-  >
-    Join Waitlist
-  </Button>
+  // <Button
+  //   className="bg-[#8668FD] text-white px-5 rounded-full hover:bg-[#9b82ff] transition"
+  //   onClick={() => (window.location.href = "/waitlist")}
+  // >
+  //   Join Waitlist
+  // </Button>
 
 )}
 

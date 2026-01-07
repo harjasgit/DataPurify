@@ -1,5 +1,6 @@
 import { Zap, Eraser, BarChart2, Download } from "lucide-react";
-import { PricingSection } from "./paymentCard";
+import PreviewSection from "./PreviewSection";
+import { P } from "framer-motion/dist/types.d-BJcRxCew";
 const features = [
   {
     id: 1,
@@ -76,4 +77,7 @@ export default function CardsSection() {
     </section>
   );
 }
- <PricingSection /> 
+<PreviewSection/>
+
+
+          

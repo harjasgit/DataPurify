@@ -10,11 +10,15 @@ import { UploadTriggerButton } from "@/components/uploadTriggerButton";
 import { useLocation } from "wouter";
 import { PricingSection } from "@/components/paymentCard";
 import { Button } from "@/components/ui/button";
+import PreviewSection from "@/components/PreviewSection";
 import { Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/context/userContext";
-import { useRef } from "react";
-
+import { useRef , useEffect} from "react";
+import TestimonialsSection from "@/components/TestimonialSection";
+import EarlyWaitlistSection from "@/components/emailWaitlistSection";
+import { supabase } from "@/lib/supabaseClient";
+import WaitlistSocialProof from "@/components/waitlistSocialProof";
 
 /* ---------- Types ---------- */
 interface FileData {
@@ -46,7 +50,17 @@ export default function Home() {
   const { theme } = useTheme();
   const { user, openAuthModal } = useUser(); // 👈 assuming showAuthModal opens your login/signup
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [waitlistCount, setWaitlistCount] = useState(0);
   const { plan } = useUser();
+
+// waitlist count fetch1 supabase
+   const fetchWaitlistCount = async () => {
+  const { count } = await supabase
+    .from("waitlist")
+    .select("*", { count: "exact", head: true });
+
+  setWaitlistCount(count || 0);
+};
   
 const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -112,6 +126,18 @@ const handleFileUpload = async (file: File) => {
     });
   }
 };
+// waitlist count fetch
+useEffect(() => {
+  const fetchWaitlistCount = async () => {
+    const { count } = await supabase
+      .from("waitlist")
+      .select("*", { count: "exact", head: true });
+
+    setWaitlistCount(count || 0);
+  };
+
+  fetchWaitlistCount();
+}, []);
 
  /* ---------- Record Linkage Upload ---------- */
 const handleRecordLinkageUpload = async (fileA: File, fileB: File) => {
@@ -258,18 +284,26 @@ const handleFullScreen = () => {
       <section className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12 pt-20 px-6">
 
         {/* LEFT SIDE */}
-        <div className="flex flex-col items-start text-left max-w-lg">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-snug mb-4">
-            Clean, standardize & format your data automatically with just{" "}
-            <span className="text-primary">one click!</span>
-          </h2>
+    {/* LEFT SIDE */}
+<div className="flex flex-col items-start text-left max-w-lg space-y-6">
 
-          <p className="text-muted-foreground mb-6 text-base md:text-lg">
-            Upload your dataset and watch DataPurify clean, standardize,
-            validate, and format it — automatically.
-          </p>
+  {/* Privacy Badge */}
+  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full 
+                  bg-primary/10 text-primary text-sm font-medium border border-primary/20">
+    🔒 Your data stays yours
+  </div>
 
-          {/* <UploadTriggerButton
+  <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-snug">
+    Clean, standardize & format your data automatically with just{" "}
+    <span className="text-primary">one click!</span>
+  </h2>
+
+  <p className="text-muted-foreground text-base md:text-lg">
+    Upload your dataset and watch DataPurify clean, standardize,
+    validate, and format it — automatically.
+  </p>
+
+          <UploadTriggerButton
             open={showUploadModal}
             onOpenChange={setShowUploadModal}
             onCleanUpload={(file) => {
@@ -288,16 +322,28 @@ const handleFullScreen = () => {
               setShowUploadModal(false);
               handleRecordLinkageUpload(fileA, fileB);
             }}
-          /> */}
+          />
+<div className="mt-6 flex items-center gap-4">
+  {/* Primary CTA */}
+  {/* <button
+    className="px-6 py-3 rounded-xl bg-primary text-white font-medium 
+               hover:opacity-90 transition"
+  >
+    Join the Waitlist
+  </button> */}
 
-          <button
-  className="mt-4 px-6 py-3 rounded-xl bg-primary text-white font-medium 
-             hover:opacity-90 transition"
->
-  Join the Waitlist
-</button>
-        </div>
-
+  {/* Secondary CTA */}
+  <a
+    href="#preview"
+    className="px-6 py-3 rounded-xl border border-border 
+               text-foreground font-medium 
+               hover:bg-muted transition"
+  >
+    See Preview
+  </a>
+</div>
+  <WaitlistSocialProof count={waitlistCount} />
+ </div>
        <div className="flex justify-center w-full md:w-[55%]">
   <div
     className="relative rounded-2xl overflow-hidden shadow-xl 
@@ -306,21 +352,21 @@ const handleFullScreen = () => {
     onClick={handleFullScreen} // optional: open modal/lightbox
   >
     <img
-      src="/PreviewImage.jpeg"   // 👉 your preview image
+      src="/Previewww.jpg"   // 👉 your preview image
       alt="DataPurify dashboard preview"
       className="w-full h-auto object-cover"
       loading="lazy"
     />
 
     {/* Hover overlay (desktop only) */}
-    <div
+    {/* <div
       className="absolute inset-0 hidden md:flex items-center justify-center 
                  opacity-0 hover:opacity-100 transition duration-200 
                  bg-black/20">
       <span className="text-white text-sm bg-black/60 px-3 py-1 rounded-md">
         Click to view full preview
       </span>
-    </div>
+    </div> */}
   </div>
 </div>
 
@@ -331,9 +377,19 @@ const handleFullScreen = () => {
         <CardsSection />
       </section>
 
-      {/* ---------------- PRICING SECTION ---------------- */}
+      {/* ---------------- Preview SECTION ---------------- */}
       <section className="w-full max-w-7xl mx-auto mt-24 px-6">
-          <PricingSection />  
+          <PreviewSection />  
+      </section>
+
+        {/* ---------------- Testimonials SECTION ---------------- */}
+      <section className="w-full max-w-7xl mx-auto mt-24 px-6">
+          <TestimonialsSection />  
+      </section>
+
+        {/* ---------------- Early Waitlist SECTION ---------------- */}
+      <section className="w-full max-w-7xl mx-auto mt-24 px-6">
+      <EarlyWaitlistSection onJoined={fetchWaitlistCount} />
       </section>
 
     </div>
