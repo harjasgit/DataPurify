@@ -37,7 +37,7 @@ const EarlyWaitlistSection = ({ onJoined }: { onJoined?: () => void }) => {
 
 
   return (
-    <section className="relative overflow-hidden py-24" id="waitlist">
+    <section className="relative overflow-hidden py-24 mt-3" id="waitlist">
       {/* Background Glow */}
       <div className="absolute inset-0 -z-10">
         <div
