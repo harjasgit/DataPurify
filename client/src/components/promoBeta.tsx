@@ -6,13 +6,10 @@ export default function EarlyAccessBanner() {
 
   if (!visible) return null;
 
-  const handleJoinWaitlist = () => {
-    // You can replace this later with:
-    // - modal open
-    // - waitlist page route
-    // - email capture flow
-    window.location.href = "/waitlist";
-  };
+ const handleJoinWaitlist = () => {
+  document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" });
+};
+
 
   return (
     <div className="w-full bg-[#1a1a2e]/95 border-b border-[#8668FD]/30 text-white">

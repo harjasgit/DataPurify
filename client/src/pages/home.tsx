@@ -303,7 +303,7 @@ const handleFullScreen = () => {
     validate, and format it — automatically.
   </p>
 
-          <UploadTriggerButton
+          {/* <UploadTriggerButton
             open={showUploadModal}
             onOpenChange={setShowUploadModal}
             onCleanUpload={(file) => {
@@ -322,15 +322,18 @@ const handleFullScreen = () => {
               setShowUploadModal(false);
               handleRecordLinkageUpload(fileA, fileB);
             }}
-          />
+          /> */}
 <div className="mt-6 flex items-center gap-4">
   {/* Primary CTA */}
-  {/* <button
+  <button
+   onClick={() =>
+    document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })
+  }
     className="px-6 py-3 rounded-xl bg-primary text-white font-medium 
                hover:opacity-90 transition"
   >
     Join the Waitlist
-  </button> */}
+  </button>
 
   {/* Secondary CTA */}
   <a

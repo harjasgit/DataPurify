@@ -107,21 +107,25 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
     </DropdownMenu>
   </div>
 ) : (
-  <div className="flex items-center space-x-3">
-    <Button className="bg-[#8668FD] text-white" onClick={() => setShowAuthModal(true)}>
-      Login
-    </Button>
-    <Button variant="outline" className="border-[#8668FD] text-[#8668FD]" onClick={() => setShowAuthModal(true)}>
-      Sign Up
-    </Button>
-  </div>
 
-  // <Button
-  //   className="bg-[#8668FD] text-white px-5 rounded-full hover:bg-[#9b82ff] transition"
-  //   onClick={() => (window.location.href = "/waitlist")}
-  // >
-  //   Join Waitlist
-  // </Button>
+  // <div className="flex items-center space-x-3">
+  //   <Button className="bg-[#8668FD] text-white" onClick={() => setShowAuthModal(true)}>
+  //     Login
+  //   </Button>
+  //   <Button variant="outline" className="border-[#8668FD] text-[#8668FD]" onClick={() => setShowAuthModal(true)}>
+  //     Sign Up
+  //   </Button>
+  // </div>
+
+  <Button
+    className="bg-[#8668FD] text-white px-5 rounded-full hover:bg-[#9b82ff] transition"
+    onClick={() => {
+  document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" });
+}}
+
+  >
+    Join Waitlist
+  </Button>
 
 )}
 
