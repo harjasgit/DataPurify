@@ -8,7 +8,7 @@ const EarlyWaitlistSection = ({ onJoined }: { onJoined?: () => void }) => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async () => {
+ const handleSubmit = async () => {
   if (!email || !email.includes("@")) {
     setError("Please enter a valid email");
     return;
@@ -16,41 +16,37 @@ const EarlyWaitlistSection = ({ onJoined }: { onJoined?: () => void }) => {
 
   setLoading(true);
   setError("");
+  setSuccess(false);
 
   try {
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Request timeout")), 10000)
-    );
-
-    const insertPromise = supabase
+    const { error } = await supabase
       .from("waitlist")
       .insert([{ email }] as any);
 
-    const { error: insertError } = (await Promise.race([
-      insertPromise,
-      timeoutPromise,
-    ])) as any;
+    if (error) {
+      console.error("SUPABASE ERROR:", error);
 
-    if (insertError) {
-      console.error("SUPABASE ERROR:", insertError);
-
-      if (insertError.code === "23505") {
+      if (error.code === "23505") {
         setError("You're already on the waitlist 😉");
       } else {
-        setError(insertError.message || "Something went wrong. Please try again.");
+        setError(error.message || "Something went wrong. Please try again.");
       }
-    } else {
-      setSuccess(true);
-      setEmail("");
-      onJoined?.();
+      return;
     }
+
+    // ✅ success
+    setSuccess(true);
+    setEmail("");
+    onJoined?.(); // refresh count
+
   } catch (err) {
-    console.error("NETWORK ERROR:", err);
-    setError("Network issue. Please try again.");
+    console.error("FATAL ERROR:", err);
+    setError("Something went wrong. Please refresh and try again.");
   } finally {
     setLoading(false);
   }
 };
+
 
 
   return (

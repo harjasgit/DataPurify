@@ -56,11 +56,11 @@ export default function Home() {
 //waitlist count fetch
 
 const fetchWaitlistCount = async () => {
-  console.log("FETCHING WAITLIST COUNT...");
+  // console.log("FETCHING WAITLIST COUNT...");
 
   const { data, error } = await supabase.rpc("get_waitlist_count");
 
-  console.log("RPC RESPONSE:", { data, error });
+  // console.log("RPC RESPONSE:", { data, error });
 
   if (error) {
     console.error("Error fetching waitlist count:", error);
