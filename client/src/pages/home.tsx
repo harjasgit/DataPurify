@@ -53,14 +53,28 @@ export default function Home() {
   const [waitlistCount, setWaitlistCount] = useState(0);
   const { plan } = useUser();
 
-// waitlist count fetch1 supabase
-   const fetchWaitlistCount = async () => {
-  const { count } = await supabase
-    .from("waitlist")
-    .select("*", { count: "exact", head: true });
+//waitlist count fetch
 
-  setWaitlistCount(count || 0);
+const fetchWaitlistCount = async () => {
+  console.log("FETCHING WAITLIST COUNT...");
+
+  const { data, error } = await supabase.rpc("get_waitlist_count");
+
+  console.log("RPC RESPONSE:", { data, error });
+
+  if (error) {
+    console.error("Error fetching waitlist count:", error);
+    return;
+  }
+
+  setWaitlistCount(Number(data) || 0);
 };
+
+useEffect(() => {
+  fetchWaitlistCount();
+}, []);
+
+
   
 const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -126,18 +140,7 @@ const handleFileUpload = async (file: File) => {
     });
   }
 };
-// waitlist count fetch
-useEffect(() => {
-  const fetchWaitlistCount = async () => {
-    const { count } = await supabase
-      .from("waitlist")
-      .select("*", { count: "exact", head: true });
 
-    setWaitlistCount(count || 0);
-  };
-
-  fetchWaitlistCount();
-}, []);
 
  /* ---------- Record Linkage Upload ---------- */
 const handleRecordLinkageUpload = async (fileA: File, fileB: File) => {
