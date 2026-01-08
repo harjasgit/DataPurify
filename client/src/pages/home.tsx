@@ -337,7 +337,7 @@ const handleFullScreen = () => {
 
   {/* Secondary CTA */}
   <a
-    href="#preview"
+    href="#preview-section"
     className="px-6 py-3 rounded-xl border border-border 
                text-foreground font-medium 
                hover:bg-muted transition"

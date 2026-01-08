@@ -20,8 +20,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       {/* <Route path="/record-linkage/:id" component={RecordUI} /> */}
-      <Route path="/privacy" component={PrivacyPolicy} />
-      <Route path="/terms" component={BetaTerms} />
+      {/* <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/terms" component={BetaTerms} /> */}
       <Route component={NotFound} />
     </Switch>
   );

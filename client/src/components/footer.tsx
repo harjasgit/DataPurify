@@ -30,10 +30,10 @@ export default function Footer() {
 
         {/* CENTER — POLICIES */}
         <div className="flex justify-center gap-8 text-sm">
-          <a href="/privacy" className="hover:text-primary transition">
+          <a  className="hover:text-primary transition">
             Privacy
           </a>
-          <a href="/terms" className="hover:text-primary transition">
+          <a  className="hover:text-primary transition">
             Terms
           </a>
         </div>
@@ -43,7 +43,7 @@ export default function Footer() {
           
           {/* Twitter */}
           <a
-            href="https://twitter.com"
+            href="https://x.com/kaurharjas166"
             target="_blank"
             className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition"
             aria-label="Twitter"
