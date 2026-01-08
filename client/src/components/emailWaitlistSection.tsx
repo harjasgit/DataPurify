@@ -9,30 +9,47 @@ const EarlyWaitlistSection = ({ onJoined }: { onJoined?: () => void }) => {
   const [error, setError] = useState("");
 
   const handleSubmit = async () => {
-  if (!email) return;
+  if (!email || !email.includes("@")) {
+    setError("Please enter a valid email");
+    return;
+  }
 
   setLoading(true);
   setError("");
 
-  const { error: insertError } = await supabase
-    .from("waitlist")
-    .insert([{ email }] as any);
+  try {
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Request timeout")), 10000)
+    );
 
-  if (insertError) {
-    if (insertError.code === "23505") {
-      setError("You're already on the waitlist 😉");
+    const insertPromise = supabase
+      .from("waitlist")
+      .insert([{ email }] as any);
+
+    const { error: insertError } = (await Promise.race([
+      insertPromise,
+      timeoutPromise,
+    ])) as any;
+
+    if (insertError) {
+      console.error("SUPABASE ERROR:", insertError);
+
+      if (insertError.code === "23505") {
+        setError("You're already on the waitlist 😉");
+      } else {
+        setError(insertError.message || "Something went wrong. Please try again.");
+      }
     } else {
-      setError("Something went wrong. Please try again.");
+      setSuccess(true);
+      setEmail("");
+      onJoined?.();
     }
-  } else {
-    setSuccess(true);
-    setEmail("");
-
-       // 🔥 THIS LINE — refresh count in parent
-    onJoined?.();
+  } catch (err) {
+    console.error("NETWORK ERROR:", err);
+    setError("Network issue. Please try again.");
+  } finally {
+    setLoading(false);
   }
-
-  setLoading(false);
 };
 
 
