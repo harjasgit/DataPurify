@@ -19,6 +19,8 @@ import TestimonialsSection from "@/components/TestimonialSection";
 import EarlyWaitlistSection from "@/components/emailWaitlistSection";
 import { supabase } from "@/lib/supabaseClient";
 import WaitlistSocialProof from "@/components/waitlistSocialProof";
+import HeroWorkflow from "@/components/heroWorkFlow";
+import Problem from "@/components/problem";
 
 /* ---------- Types ---------- */
 interface FileData {
@@ -283,102 +285,130 @@ const handleFullScreen = () => {
   {!fileData ? (
     <div className="w-full flex flex-col items-center">
 
-      {/* ---------------- HERO SECTION ---------------- */}
-      <section className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12 pt-20 px-6">
 
-        {/* LEFT SIDE */}
-    {/* LEFT SIDE */}
-<div className="flex flex-col items-start text-left max-w-lg space-y-6">
+{/* ---------------- HERO SECTION ---------------- */}
+<section className="relative w-full max-w-7xl mx-auto 
+  pt-12 sm:pt-16 
+  pb-16 sm:pb-24 
+  px-4 sm:px-6"
+>
+  <div className="grid grid-cols-1 md:grid-cols-12 gap-12 sm:gap-16 items-center">
 
-  {/* Privacy Badge */}
-  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full 
-                  bg-primary/10 text-primary text-sm font-medium border border-primary/20">
-    🔒 Your data stays yours
+    {/* LEFT */}
+    <div className="
+      md:col-span-6 
+      flex flex-col 
+      items-start 
+      space-y-6 sm:space-y-7 
+      max-w-xl
+    ">
+      {/* Badge */}
+      <div
+        className="
+          inline-flex items-center gap-2 
+          px-3 py-1.5 sm:px-4 
+          rounded-full
+          bg-primary/10 text-primary 
+          text-xs sm:text-sm 
+          font-medium 
+          border border-primary/20
+        "
+      >
+        🔒 Your data stays yours
+      </div>
+
+      {/* Heading */}
+      <h1 className="
+        text-2xl sm:text-3xl md:text-5xl
+        font-bold 
+        text-foreground 
+        leading-tight
+      ">
+        Stop wasting hours cleaning{" "}
+        <span className="text-primary">messy data</span>
+      </h1>
+
+      {/* Subtext */}
+      <p className="
+        text-sm sm:text-base md:text-xl
+        text-muted-foreground
+        leading-relaxed
+        max-w-md
+      ">
+        DataPurify cleans CSV & Excel files by fixing duplicates,
+        missing values, and formatting issues — in seconds.
+      </p>
+
+      {/* CTAs */}
+      <div className="
+        flex flex-col sm:flex-row
+        items-stretch sm:items-center
+        gap-3 sm:gap-4
+        w-full sm:w-auto
+      ">
+        <button
+          onClick={() =>
+            document
+              .getElementById("waitlist")
+              ?.scrollIntoView({ behavior: "smooth" })
+          }
+          className="
+            w-full sm:w-auto
+            px-6 py-3 
+            rounded-xl 
+            bg-primary 
+            text-white 
+            font-medium
+            hover:opacity-90 
+            transition
+          "
+        >
+          Join the Waitlist
+        </button>
+
+        <a
+          href="#preview-section"
+          className="
+            w-full sm:w-auto
+            px-6 py-3 
+            rounded-xl 
+            border border-border
+            text-foreground 
+            font-medium 
+            text-center
+            hover:bg-muted 
+            transition
+          "
+        >
+          See Preview
+        </a>
+      </div>
+
+      {/* Social Proof */}
+      <WaitlistSocialProof count={waitlistCount} />
+    </div>
+
+    {/* RIGHT */}
+    <div className="
+      md:col-span-6 
+      flex justify-center 
+      mt-8 md:mt-0
+      md:-translate-y-6
+    ">
+      <HeroWorkflow />
+    </div>
+
   </div>
+</section>
 
-  <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-snug">
-    Clean, standardize & format your data automatically with just{" "}
-    <span className="text-primary">one click!</span>
-  </h2>
 
-  <p className="text-muted-foreground text-base md:text-lg">
-    Upload your dataset and watch DataPurify clean, standardize,
-    validate, and format it — automatically.
-  </p>
-
-          {/* <UploadTriggerButton
-            open={showUploadModal}
-            onOpenChange={setShowUploadModal}
-            onCleanUpload={(file) => {
-              if (!user) {
-                openAuthModal();
-                return;
-              }
-              setShowUploadModal(false);
-              handleFileUpload(file);
-            }}
-            onRecordLinkageUpload={(fileA, fileB) => {
-              if (!user) {
-                openAuthModal();
-                return;
-              }
-              setShowUploadModal(false);
-              handleRecordLinkageUpload(fileA, fileB);
-            }}
-          /> */}
-<div className="mt-6 flex items-center gap-4">
-  {/* Primary CTA */}
-  <button
-   onClick={() =>
-    document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })
-  }
-    className="px-6 py-3 rounded-xl bg-primary text-white font-medium 
-               hover:opacity-90 transition"
-  >
-    Join the Waitlist
-  </button>
-
-  {/* Secondary CTA */}
-  <a
-    href="#preview-section"
-    className="px-6 py-3 rounded-xl border border-border 
-               text-foreground font-medium 
-               hover:bg-muted transition"
-  >
-    See Preview
-  </a>
-</div>
-  <WaitlistSocialProof count={waitlistCount} />
- </div>
-       <div className="flex justify-center w-full md:w-[55%]">
-  <div
-    className="relative rounded-2xl overflow-hidden shadow-xl 
-               border border-border/40 bg-card 
-               w-full max-w-xl cursor-pointer"
-    onClick={handleFullScreen} // optional: open modal/lightbox
-  >
-    <img
-      src="/Previewww.jpg"   // 👉 your preview image
-      alt="DataPurify dashboard preview"
-      className="w-full h-auto object-cover"
-      loading="lazy"
-    />
-
-    {/* Hover overlay (desktop only) */}
-    {/* <div
-      className="absolute inset-0 hidden md:flex items-center justify-center 
-                 opacity-0 hover:opacity-100 transition duration-200 
-                 bg-black/20">
-      <span className="text-white text-sm bg-black/60 px-3 py-1 rounded-md">
-        Click to view full preview
-      </span>
-    </div> */}
-  </div>
-</div>
-
+ {/* ---------------- PROBLEMS SECTION ---------------- */}
+      <section className="w-full max-w-7xl mx-auto mt-24 px-6">
+        <Problem />
       </section>
+  
 
-      {/* ---------------- FEATURES SECTION ---------------- */}
+ {/* ---------------- FEATURES SECTION ---------------- */}
       <section className="w-full max-w-7xl mx-auto mt-24 px-6">
         <CardsSection />
       </section>
@@ -404,15 +434,15 @@ const handleFullScreen = () => {
                     <h2 className="text-xl font-semibold text-foreground">Data Preview</h2>
                     
                       <div className="flex items-center space-x-2 relative">
-                      <span className="text-sm text-muted-foreground">Smart Preview</span>
+                      <span className="text-sm text-muted-foreground"></span>
                       <div className="relative">
                         <Switch checked={smartPreview} onCheckedChange={handleSmartToggle} />
                         <div
                           className="absolute inset-0 backdrop-blur-sm bg-black/20 rounded-md flex items-center justify-center cursor-pointer"
                           onClick={() => setShowUpgradePrompt(true)}
                         >
-                          <Lock className="w-4 h-4 text-white mr-1" />
-                          <span className="text-xs text-white">Pro</span>
+                          {/* <Lock className="w-4 h-4 text-white mr-1" /> */}
+                          <span className="text-xs text-white"></span>
                         </div>
                       </div>
                     </div>
