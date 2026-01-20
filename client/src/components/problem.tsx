@@ -40,8 +40,8 @@ export default function Problem() {
         {/* Heading */}
         <div className="text-center max-w-xl mx-auto">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground">
-            Messy data slows everything down
-          </h2>
+            Messy Data Slows Everything Down         
+         </h2>
           <p className="mt-3 text-sm sm:text-base text-muted-foreground">
             Most CSV & Excel files aren’t analysis-ready — hours are lost before real work begins
           </p>
